@@ -1646,7 +1646,7 @@ $(document).ready(function() {
             .replaceAll('initialD', '<img src="https://cdn.7tv.app/emote/6234debcb1ac2f1588862afb/1x.webp"/>')
 
             $('.posts').append(`<div class="post">
-                    <div class="post-text">${pasta}</div>
+                    <div class="post-text" data-pasta="${value['pasta']}">${pasta}</div>
                     <div class="pasta-author">by ${value['author']}</div>
                 </div>`)
         });
@@ -1679,6 +1679,7 @@ $(document).ready(function() {
     // Copy text from post textarea to clipboard
     $(document).on('click', '.post-text', function() {
         var pasta = $(this).data('pasta');
+        console.log(pasta)
         navigator.clipboard.writeText(pasta);
         $(".copy-alert").text("Скопировано!").show().fadeOut(1200);
     });
