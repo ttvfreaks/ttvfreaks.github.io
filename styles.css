@@ -1,0 +1,109 @@
+* {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 20px);
+}
+
+.header {
+    background-color: #f0f0f0;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    height: 42px;
+}
+
+.header input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+    margin-left: 10px;
+}
+
+.header button {
+    padding: 10px;
+    font-size: 16px;
+}
+
+.main-content {
+    display: flex;
+    flex: 1;
+    padding: 0 10px;
+    overflow: hidden;
+}
+
+.library, .posts, .lyrics {
+    flex: 1;
+    margin: 10px;
+    margin-bottom: 0;
+    overflow-y: auto;
+}
+
+.library h2, .posts h2, .lyrics h2 {
+    margin-top: 0;
+}
+
+.library-items {
+    display: flex;
+    flex-direction: column;
+}
+
+.library-item {
+    padding: 5px;
+    margin: 5px 0;
+    background-color: #e0e0e0;
+    cursor: pointer;
+}
+.highlight{
+    background-color: #ccbfbf;
+}
+
+.post {
+    display: flex;
+    flex-direction: column;
+    margin: 10px 0;
+}
+
+.post-text {
+    flex: 1;
+    padding: 10px;
+    margin-bottom: 5px;
+
+    border: 1px solid black;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.post-text img{
+    height: 20px;
+    object-fit: cover;
+}
+
+.pasta-author {
+    display: flex;
+    margin-right: 10px;
+    align-self: flex-end;
+    opacity: 50%;
+    font-size: 13px;
+    cursor: pointer;
+}
+.posts h2{
+    display: inline-block;
+}
+.copy-alert {
+    display: inline-block;
+    margin-left: 10px;
+    text-align: center;
+    color: #51ff5a;
+}
+
+.lyrics-text {
+    padding: 10px;
+    background-color: #f9f9f9;
+    height: 100%;
+}
