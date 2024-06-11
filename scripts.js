@@ -1668,7 +1668,6 @@ $(document).ready(function() {
         $('.library-item:first').addClass('highlight')
     });
 
-    // Copy text from library item to post textarea
     $(document).on('click', '.library-item', function() {
         
         writePastas($(this).text().trim())
@@ -1676,7 +1675,6 @@ $(document).ready(function() {
 
     });
 
-    // Copy text from post textarea to clipboard
     $(document).on('click', '.post-text', function() {
         var pasta = $(this).data('pasta');
         console.log(pasta)
