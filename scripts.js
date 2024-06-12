@@ -1200,6 +1200,10 @@ pastas = {
         {
           "author": "kuriyani",
           "pasta": "\u0410\u0425\u0423\u0415\u0422\u042c FunkyBeats \u041f\u0420\u0418\u041f\u0415\u0412 \u041d\u0410 \u0410\u041d\u0413\u041b\u0418\u0419\u0421\u041a\u041e\u041c FunkyBeats \u0410\u0425\u0423\u0415\u0422\u042c FunkyBeats \u041f\u0420\u0418\u041f\u0415\u0412 \u041d\u0410 \u0410\u041d\u0413\u041b\u0418\u0419\u0421\u041a\u041e\u041c FunkyBeats \u0410\u0425\u0423\u0415\u0422\u042c FunkyBeats \u041f\u0420\u0418\u041f\u0415\u0412 \u041d\u0410 \u0410\u041d\u0413\u041b\u0418\u0419\u0421\u041a\u041e\u041c FunkyBeats "
+        },
+        {
+          "author": "klabisot",
+          "pasta": "FunkyBeats КАК БУДТО БЫ БРУКЛИН FunkyBeats ПСЫ ИДУТ НА ЗАПАХ FunkyBeats КОГДА ПАПА В БУДКЕ FunkyBeats МУТКИ FunkyBeats BLOODY BABYLON — ТЕБЕ НЕ ШУТКИ FunkyBeats "
         }
       ]
     },
@@ -1448,6 +1452,10 @@ pastas = {
         {
           "author": "kuriyani",
           "pasta": "\u0431\u043b\u044f\u044f\u044f\u044f\u044f\u044f\u044f pepeW RapThis \u0431\u043b\u044f\u044f\u044f\u044f\u044f\u044f\u044f pepeW RapThis \u0431\u043b\u044f\u044f\u044f\u044f\u044f\u044f\u044f pepeW RapThis \u0431\u043b\u044f\u044f\u044f\u044f\u044f\u044f\u044f pepeW RapThis \u0431\u043b\u044f\u044f\u044f\u044f\u044f\u044f\u044f pepeW RapThis \u0431\u043b\u044f\u044f\u044f\u044f\u044f\u044f\u044f pepeW RapThis \u0431\u043b\u044f\u044f\u044f\u044f\u044f\u044f\u044f pepeW RapThis "
+        },
+        {
+          "author": "klabisot",
+          "pasta": "TaaPls WHAT YOU KNOW TaaPls ABOUT ROLLIN' DOWN TaaPls IN THE DEEP TaaPls WHEN YOUR BRAIN TaaPls GOES NUMB TaaPls YOU CAN CALL THAT MENTAL FREEZE TaaPls"
         }
       ]
     },
@@ -1599,11 +1607,11 @@ $(document).ready(function() {
     const originalOrder = $('.library-item').toArray();
 
     function filterLibraryItems(query) {
-        var libraryItems = $('.library-item');
+        var libraryItems = originalOrder;
         if (query === '') {
             $('#libraryItems').empty().append(originalOrder);
         } else {
-            const filteredItems = libraryItems.toArray().filter(item => {
+            const filteredItems = libraryItems.filter(item => {
                 return $(item).text().toLowerCase().includes(query);
             });
 
