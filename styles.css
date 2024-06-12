@@ -59,7 +59,8 @@ h2{
     padding: 0 15px;
     margin-left: 10px;
     text-align: center;
-    align-content: center;
+    line-height: 41px;
+    vertical-align: middle;
     cursor: pointer;
 }
 #clearButton:hover{
