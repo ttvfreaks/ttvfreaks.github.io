@@ -1579,11 +1579,15 @@ $(document).ready(function() {
     const originalOrder = $('.library-item').toArray();
 
     function filterLibraryItems(query) {
-        const libraryItems = $('.library-item');
+        var libraryItems = $('.library-item');
         if (query === '') {
             $('#libraryItems').empty().append(originalOrder);
         } else {
-            const sortedItems = libraryItems.toArray().sort((a, b) => {
+            const filteredItems = libraryItems.toArray().filter(item => {
+                return $(item).text().toLowerCase().includes(query);
+            });
+
+            const sortedItems = filteredItems.sort((a, b) => {
                 const itemAText = $(a).text().toLowerCase();
                 const itemBText = $(b).text().toLowerCase();
                 const similarityA = similarity(query, itemAText);
