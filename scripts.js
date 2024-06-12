@@ -140,6 +140,10 @@ pastas = {
         {
           "author": "megazhizha",
           "pasta": " suetolog \u0422\u042b \u041a\u0410 suetolog \u0414\u041e\u0413\u0410\u0414\u0410\u0419\u0421\u042f suetolog \u042d\u0422\u041e \u041d\u0415\u041f\u0420\u041e\u0421\u0422\u041e suetolog \u041d\u0410\u041c\u0415\u0420\u0415\u041d\u041d\u041e \u041b\u0418 suetolog \u041d\u0410\u0421 suetolog \u0422\u0420\u0410\u0412\u0418\u041b\u0418  suetolog \u0417\u0412\u0401\u0417\u0414\u042b suetolog "
+        },
+        {
+          "author": "чаттерсы",
+          "pasta": "sdd ТЫГЫДЫГЫДАЙСЯ sdd ТЫГЫДЫГЫДАЙСЯ sdd ТЫГЫДЫГЫДАЙСЯ sdd ТЫГЫДЫГЫДАЙСЯ sdd ТЫГЫДЫГЫДАЙСЯ sdd ТЫГЫДЫГЫДАЙСЯ sdd ТЫГЫДЫГЫДАЙСЯ sdd ТЫГЫДЫГЫДАЙСЯ sdd ТЫГЫДЫГЫДАЙСЯ sdd"
         }
       ]
     },
