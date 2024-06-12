@@ -173,3 +173,16 @@ h2{
     background-color: rgb(119, 119, 119);
     height: 100%;
 }
+
+.author{
+    position: absolute;
+    font-size: 13px;
+    opacity: 50%;
+    bottom: 0;
+    right: 0;
+    margin: 10px;
+    text-align: right;
+}
+.author img{
+    height: 13px;
+}
