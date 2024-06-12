@@ -1670,7 +1670,9 @@ $(document).ready(function() {
     writePastas($('.library-item:first').text().trim())
     $('.library-item:first').addClass('highlight')
 
+    let currentIndex = 0;
     $('#searchInput').on('input', function() {
+      currentIndex = 0
         const query = $(this).val().toLowerCase();
         filterLibraryItems(query);
         writePastas($('.library-item:first').text().trim())
@@ -1678,6 +1680,7 @@ $(document).ready(function() {
     });
 
     $('#clearButton').click(function() {
+        currentIndex = 0
         $('#searchInput').val('');
         filterLibraryItems('');
         writePastas($('.library-item:first').text().trim())
@@ -1686,9 +1689,36 @@ $(document).ready(function() {
 
     $(document).on('click', '.library-item', function() {
         
+        currentIndex = $('.library').index(this)
         writePastas($(this).text().trim())
         $(this).addClass('highlight')
 
+    });
+
+    function selectByArrow(index){
+      writePastas($('.library-item').eq(index).text().trim())
+
+      const item = $('.library-item').eq(index)
+
+      item.addClass('highlight')
+      
+      $('.library').animate({
+          scrollTop: $('.library').scrollTop() + item.position().top - $('.library').height()/2 + item.height()/2
+      }, 150);
+
+      $('.library').scrollTop($('.library').scrollTop() + item.position().top - $('.library').height()/2 + item.height()/2);
+    }
+
+    $(document).keydown(function(e) {
+        if (e.key === "ArrowUp") {
+            const items = $('.library-item');
+            currentIndex = (currentIndex - 1 + items.length) % items.length;
+            selectByArrow(currentIndex);
+        } else if (e.key === "ArrowDown") {
+            const items = $('.library-item');
+            currentIndex = (currentIndex + 1) % items.length;
+            selectByArrow(currentIndex);
+        }
     });
 
     $(document).on('click', '.post-text', function() {
