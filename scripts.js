@@ -1518,6 +1518,22 @@ pastas = {
           "pasta": "TaaPls \u0415\u0421\u041b\u0418 TaaPls  \u0421\u0423\u041a\u0410 TaaPls \u041d\u0410 \u041c\u041d\u0415 TaaPls \u0422\u0415\u041f\u0415\u0420\u042c TaaPls \u042d\u0422\u0410 \u0421\u0423\u041a\u0410 TaaPls \u0411\u041e\u0413\u0410\u0422\u0410 TaaPls \u0411\u041b\u0415\u0421\u0422\u042f\u0422 TaaPls \u042d\u0422\u0418 \u041a\u0410\u041c\u041d\u0418 TaaPls \u0412\u0415\u0414\u042c \u041a\u0410\u041a \u0421\u0423\u041a\u0410 TaaPls \u041c\u041d\u041e\u0413\u041e TaaPls \u0420\u0410\u0411\u041e\u0422\u0410\u041b TaaPls "
         }
       ]
+    },
+    "10AGE - Нету интереса": {
+      "pastas": [
+        {
+          "author": "klabisot",
+          "pasta": "TaaPls RapThis НЕТУ ИНТЕРЕСА TaaPls RapThis ДОКАЗЫВАТЬ ЧЁ-ТО TaaPls RapThis 🍅АМ TaaPls RapThis ВСЕ КОМУ ПО КАЙФУ TaaPls RapThis ОТЛИЗЫВАЮТ РАДИ ВЫГОДЫ TaaPls RapThis"
+        }
+      ]
+    },
+    "10AGE - Зоопарк": {
+      "pastas": [
+        {
+          "author": "klabisot",
+          "pasta": "FunkyBeats АЛКО FunkyBeats СИГИ FunkyBeats СУКИ FunkyBeats ТОЛКАЮТ МЕНЯ УСТРОИТЬ ГРЯЗЬ FunkyBeats ЛУЧШИЕ ПОДРУГИ FunkyBeats ЗА ТАБЛЫ FunkyBeats ГОТОВЫ ОБЛИЗАТЬ FunkyBeats"
+        }
+      ]
     }
   }
 
