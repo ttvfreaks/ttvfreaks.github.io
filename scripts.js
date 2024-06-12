@@ -1075,14 +1075,6 @@ pastas = {
         }
       ]
     },
-    "\u0438\u043b\u044e\u0445\u0430": {
-      "pastas": [
-        {
-          "author": "kuriyani",
-          "pasta": "\u041f\u0418\u0421\u042f\u0422 \u0414\u0412\u0410 suetolog \u041f\u0418\u0421\u042f\u0422 \u0414\u0412\u0410 suetolog \u041f\u0418\u0421\u042f\u0422 \u0414\u0412\u0410 suetolog \u041f\u0418\u0421\u042f\u0422 \u0414\u0412\u0410 suetolog \u041f\u0418\u0421\u042f\u0422 \u0414\u0412\u0410 suetolog \u041f\u0418\u0421\u042f\u0422 \u0414\u0412\u0410 suetolog \u041f\u0418\u0421\u042f\u0422 \u0414\u0412\u0410 suetolog \u041f\u0418\u0421\u042f\u0422 \u0414\u0412\u0410 suetolog \u041f\u0418\u0421\u042f\u0422 \u0414\u0412\u0410 suetolog \u041f\u0418\u0421\u042f\u0422 \u0414\u0412\u0410 suetolog "
-        }
-      ]
-    },
     "Truwer - Uyat emes": {
       "pastas": [
         {
@@ -1197,10 +1189,6 @@ pastas = {
     },
     "Miyagi & Andy Panda feat. TumaniYO - Brooklyn": {
       "pastas": [
-        {
-          "author": "kuriyani",
-          "pasta": "\u0410\u0425\u0423\u0415\u0422\u042c FunkyBeats \u041f\u0420\u0418\u041f\u0415\u0412 \u041d\u0410 \u0410\u041d\u0413\u041b\u0418\u0419\u0421\u041a\u041e\u041c FunkyBeats \u0410\u0425\u0423\u0415\u0422\u042c FunkyBeats \u041f\u0420\u0418\u041f\u0415\u0412 \u041d\u0410 \u0410\u041d\u0413\u041b\u0418\u0419\u0421\u041a\u041e\u041c FunkyBeats \u0410\u0425\u0423\u0415\u0422\u042c FunkyBeats \u041f\u0420\u0418\u041f\u0415\u0412 \u041d\u0410 \u0410\u041d\u0413\u041b\u0418\u0419\u0421\u041a\u041e\u041c FunkyBeats "
-        },
         {
           "author": "klabisot",
           "pasta": "FunkyBeats КАК БУДТО БЫ БРУКЛИН FunkyBeats ПСЫ ИДУТ НА ЗАПАХ FunkyBeats КОГДА ПАПА В БУДКЕ FunkyBeats МУТКИ FunkyBeats BLOODY BABYLON — ТЕБЕ НЕ ШУТКИ FunkyBeats "
@@ -1450,10 +1438,6 @@ pastas = {
     "Masked Wolf - Astronaut in the Ocean [feat. \u0415\u0433\u043e\u0440 \u041a\u0440\u0438\u0434]": {
       "pastas": [
         {
-          "author": "kuriyani",
-          "pasta": "\u0431\u043b\u044f\u044f\u044f\u044f\u044f\u044f\u044f pepeW RapThis \u0431\u043b\u044f\u044f\u044f\u044f\u044f\u044f\u044f pepeW RapThis \u0431\u043b\u044f\u044f\u044f\u044f\u044f\u044f\u044f pepeW RapThis \u0431\u043b\u044f\u044f\u044f\u044f\u044f\u044f\u044f pepeW RapThis \u0431\u043b\u044f\u044f\u044f\u044f\u044f\u044f\u044f pepeW RapThis \u0431\u043b\u044f\u044f\u044f\u044f\u044f\u044f\u044f pepeW RapThis \u0431\u043b\u044f\u044f\u044f\u044f\u044f\u044f\u044f pepeW RapThis "
-        },
-        {
           "author": "klabisot",
           "pasta": "TaaPls WHAT YOU KNOW TaaPls ABOUT ROLLIN' DOWN TaaPls IN THE DEEP TaaPls WHEN YOUR BRAIN TaaPls GOES NUMB TaaPls YOU CAN CALL THAT MENTAL FREEZE TaaPls"
         }
@@ -1535,7 +1519,7 @@ pastas = {
       "pastas": [
         {
           "author": "klabisot",
-          "pasta": "TaaPls RapThis НЕТУ ИНТЕРЕСА TaaPls RapThis ДОКАЗЫВАТЬ ЧЁ-ТО TaaPls RapThis 🍅АМ TaaPls RapThis ВСЕ КОМУ ПО КАЙФУ TaaPls RapThis ОТЛИЗЫВАЮТ РАДИ ВЫГОДЫ TaaPls RapThis"
+          "pasta": "suetolog НЕТУ ИНТЕРЕСА suetolog ДОКАЗЫВАТЬ ЧЁ-ТО suetolog 🍅АМ suetolog ВСЕ КОМУ ПО КАЙФУ suetolog ОТЛИЗЫВАЮТ РАДИ ВЫГОДЫ suetolog"
         }
       ]
     },
@@ -1543,7 +1527,7 @@ pastas = {
       "pastas": [
         {
           "author": "klabisot",
-          "pasta": "FunkyBeats АЛКО FunkyBeats СИГИ FunkyBeats СУКИ FunkyBeats ТОЛКАЮТ МЕНЯ УСТРОИТЬ ГРЯЗЬ FunkyBeats ЛУЧШИЕ ПОДРУГИ FunkyBeats ЗА ТАБЛЫ FunkyBeats ГОТОВЫ ОБЛИЗАТЬ FunkyBeats"
+          "pasta": "TaaPls RapThis АЛКО TaaPls RapThis СИГИ TaaPls RapThis СУКИ TaaPls RapThis ТОЛКАЮТ МЕНЯ УСТРОИТЬ ГРЯЗЬ TaaPls RapThis ЛУЧШИЕ ПОДРУГИ TaaPls RapThis ЗА ТАБЛЫ TaaPls RapThis ГОТОВЫ ОБЛИЗАТЬ TaaPls RapThis"
         }
       ]
     }
