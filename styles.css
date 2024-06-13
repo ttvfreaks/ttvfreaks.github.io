@@ -170,6 +170,11 @@ h2{
     color: rgb(236, 84, 84);
     font-weight: bolder;
 }
+.pinned::before{
+    content: '📌';
+    font-weight: bolder;
+    font-size: 14px;
+}
 .library-item {
     padding: 5px;
     margin: 5px 0;
