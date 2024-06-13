@@ -46,6 +46,46 @@ h2{
     background-position: center; */
 }
 
+#whats-new-screen{
+    position: absolute;
+    width: calc(100% - 150px);
+    height: calc(100vh - 60px);
+    margin: 0;
+    padding: 30px;
+    padding-left: 120px;
+    top: 0;
+    left: 0;
+    background-color: rgb(23, 18, 17, 0.95);
+    z-index: 10;
+    overflow-y: auto;
+}
+#whats-new-screen h1{
+    margin-bottom: 0;
+}
+#whats-new-screen ul{
+    padding-left: 20px;
+    font-size: 18px;
+}
+#whats-new-screen .emote{
+    height: 20px;
+}
+#whats-new-screen .emote{
+    max-width: 300px;
+}
+.ul-h1{
+    font-size: 25px;
+    margin-bottom: 15px;
+}
+#whats-new-screen>ul>li{
+    padding-top: 20px;
+}
+.new-marker::after{
+    content: 'NEW';
+    color: rgb(236, 84, 84);
+    font-weight: bolder;
+    margin-left: 5px;
+}
+
 .header {
     padding: 10px;
     display: flex;
@@ -86,10 +126,17 @@ h2{
     box-sizing: border-box;
     margin-left: 10px;
 }
-
 .header button {
     padding: 10px;
     font-size: 16px;
+}
+.whats-new{
+    padding: 0 10px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.whats-new:hover{
+    text-decoration: underline;
 }
 
 .main-content {
@@ -118,6 +165,11 @@ h2{
     flex-direction: column;
 }
 
+.new-library-item::before{
+    content: 'NEW';
+    color: rgb(236, 84, 84);
+    font-weight: bolder;
+}
 .library-item {
     padding: 5px;
     margin: 5px 0;
@@ -167,6 +219,27 @@ h2{
     margin-left: 10px;
     text-align: center;
     color: #51ff5a;
+}
+.copy-with{
+    font-size: 13px;
+    padding: 5px;
+}
+.copy-with *{
+    display: inline-block;
+}
+
+.variant{
+    padding: 0 5px;
+    cursor: pointer;
+
+    border: 1px solid #414141;
+    border-radius: 5px;
+}
+.active-variant{
+    background-color: #414141;
+}
+.variant:hover{
+    background-color: #414141;
 }
 
 .lyrics-text {
