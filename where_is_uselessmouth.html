@@ -164,7 +164,7 @@
     <div class="bg"></div>
     <div class="container">
         <div class="square center-positioner">
-            <img class="" src="https://lh3.googleusercontent.com/d/1TJWNKlfXK8mAmOLf86pCSmkha1zcUqt4"/>
+            <img id="uzy" class="" src="https://lh3.googleusercontent.com/d/1TJWNKlfXK8mAmOLf86pCSmkha1zcUqt4"/>
         </div>
         <div class="dot-container center-positioner dot-1">
             <div class="dot"></div>
@@ -198,5 +198,31 @@
         страницу создал klabisot<br>
         я не буду адаптировать страницу под телефоны, иначе я ёбнусь <img src="https://cdn.7tv.app/emote/647e08cd628540685215bdbc/4x.webp"/>
     </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function getCookie(cname) {
+            var name = cname + "=";
+            var decodedCookie = decodeURIComponent(document.cookie);
+            var ca = decodedCookie.split(';');
+            for(var i = 0; i <ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                } 
+            }
+            return "";
+        }
+
+        var randomNumber = Math.floor(Math.random() * 10) + 1;
+
+        if(randomNumber === 10 && getCookie('was_here') == 'True'){
+            $('#uzy').attr('src', 'https://lh3.googleusercontent.com/d/1pkVXgXCW9gZeTDZoBIPE5FbEovZzdKca')
+        }
+        document.cookie = "was_here=True";
+    </script>
 </body>
 </html>
