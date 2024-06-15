@@ -84,6 +84,11 @@ h2{
     color: rgb(236, 84, 84);
     font-weight: bolder;
     margin-left: 5px;
+}.new-marker-before::before{
+    content: 'NEW';
+    color: rgb(236, 84, 84);
+    font-weight: bolder;
+    margin-left: 5px;
 }
 
 .header {
