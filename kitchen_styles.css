@@ -205,7 +205,7 @@ h2{
 .cook-pasta{
     margin-bottom: 0;
 }
-.cook-pasta:hover, .delete-pasta:hover, .export-pasta:hover{
+.cook-pasta:hover, .delete-pasta:hover, .export-pasta:hover, .to-lower:hover, .to-upper:hover{
     cursor: pointer;
     background-color: rgb(119, 119, 119);
 }
@@ -227,6 +227,15 @@ h2{
 }
 .cooked-pastas{
     overflow-y: auto;
+}
+.to-lower, .to-upper{
+    display: inline-block;
+    width: 49%;
+    text-align: center;
+    font-size: 14px;
+
+    border: 1px solid rgb(119, 119, 119);
+    border-radius: 5px;
 }
 
 .library h2, .kitchen h2, .lyrics h2 {
