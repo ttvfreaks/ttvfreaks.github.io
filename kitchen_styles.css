@@ -1,0 +1,274 @@
+* {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+
+    color: white;
+}
+
+body {
+    background-color: #171211;
+}
+
+p{
+    margin: 0;
+    padding: 0;
+    font-size: 13px;
+    opacity: 50%;
+}
+h2{
+    margin-bottom: 0;
+}
+
+.container:after {
+    content:'';
+    background: url("https://www.radiorecord.ru/upload/iblock/2cd/mfdsk.jpeg");
+    background-repeat: no-repeat;
+    background-position: bottom;
+    position: absolute;
+    top:0px;
+    left: 0px;
+    width:100%;
+    height:100%;
+    z-index:-1;
+    opacity: 0.05;
+}
+.container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 20px);
+    /* background: url("https://www.radiorecord.ru/upload/iblock/2cd/mfdsk.jpeg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-blend-mode:multiply; */
+    /* background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center; */
+}
+
+#whats-new-screen{
+    position: absolute;
+    width: calc(100% - 150px);
+    height: calc(100vh - 60px);
+    margin: 0;
+    padding: 30px;
+    padding-left: 120px;
+    top: 0;
+    left: 0;
+    background-color: rgb(23, 18, 17, 0.95);
+    z-index: 10;
+    overflow-y: auto;
+}
+#whats-new-screen h1{
+    margin-bottom: 0;
+}
+#whats-new-screen ul{
+    padding-left: 20px;
+    font-size: 18px;
+}
+#whats-new-screen .emote{
+    height: 20px;
+}
+#whats-new-screen .emote{
+    max-width: 300px;
+}
+.ul-h1{
+    font-size: 25px;
+    margin-bottom: 15px;
+}
+#whats-new-screen>ul>li{
+    padding-top: 20px;
+}
+.new-marker::after{
+    content: 'NEW';
+    color: rgb(236, 84, 84);
+    font-weight: bolder;
+    margin-left: 5px;
+}.new-marker-before::before{
+    content: 'NEW';
+    color: rgb(236, 84, 84);
+    font-weight: bolder;
+    margin-left: 5px;
+}
+
+.tracklist-header {
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    height: 42px;
+}
+#clearButton{
+    border: 1px solid rgb(119, 119, 119);
+    border-radius: 5px;
+    height: 41px;
+    padding: 0 15px;
+    text-align: center;
+    line-height: 41px;
+    vertical-align: middle;
+    cursor: pointer;
+}
+#clearButton:hover{
+    background-color: rgb(119, 119, 119);
+}
+#searchInput{
+    border: 1px solid rgb(119, 119, 119);
+    border-radius: 5px;
+    background-image:none;
+    background-color:transparent;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+
+    margin-right: 10px;
+    background: #171211;
+}
+
+.tracklist-header input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+    margin-left: 10px;
+}
+.tracklist-header button {
+    padding: 10px;
+    font-size: 16px;
+}
+.whats-new{
+    padding: 0 10px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.whats-new:hover{
+    text-decoration: underline;
+}
+
+.main-content {
+    display: flex;
+    flex: 1;
+    padding: 0 10px;
+    overflow: hidden;
+}
+
+.library, .kitchen, .lyrics {
+    flex: 1;
+    margin: 10px;
+    margin-bottom: 0;
+    overflow-y: auto;
+}
+.library::-webkit-scrollbar, .kitchen::-webkit-scrollbar {
+    display: none;
+}
+.kitchen p img{
+    height: 14px;
+}
+
+.library h2, .kitchen h2, .lyrics h2 {
+    margin-top: 0;
+}
+
+.library-items {
+    display: flex;
+    flex-direction: column;
+}
+
+.new-library-item::before{
+    content: 'NEW';
+    color: rgb(236, 84, 84);
+    font-weight: bolder;
+}
+.pinned::before{
+    content: '📌';
+    font-weight: bolder;
+    font-size: 14px;
+}
+.library-item {
+    padding: 5px;
+    margin: 5px 0;
+    
+    border: 1px solid rgb(119, 119, 119);
+    border-radius: 5px;
+    cursor: pointer;
+}
+.highlight{
+    background-color: #414141;
+}
+
+.post {
+    display: flex;
+    flex-direction: column;
+    margin: 10px 0;
+    margin-top: 5px;
+}
+
+.post-text {
+    flex: 1;
+    padding: 10px;
+    margin-bottom: 5px;
+
+    border: 1px solid rgb(119, 119, 119);
+    border-radius: 5px;
+    cursor: pointer;
+}
+.post-text img{
+    height: 20px;
+    object-fit: cover;
+}
+
+.pasta-author {
+    display: flex;
+    margin-right: 10px;
+    align-self: flex-end;
+    opacity: 50%;
+    font-size: 13px;
+    cursor: pointer;
+}
+.kitchen h2{
+    display: inline-block;
+}
+.copy-alert {
+    display: inline-block;
+    margin-left: 10px;
+    text-align: center;
+    color: #51ff5a;
+}
+.copy-with{
+    font-size: 13px;
+    padding: 5px;
+}
+.copy-with *{
+    display: inline-block;
+}
+
+.variant{
+    padding: 0 5px;
+    cursor: pointer;
+
+    border: 1px solid #414141;
+    border-radius: 5px;
+}
+.active-variant{
+    background-color: #414141;
+}
+.variant:hover{
+    background-color: #414141;
+}
+
+.lyrics-text {
+    padding: 10px;
+    background-color: rgb(119, 119, 119);
+    height: 100%;
+}
+
+.author{
+    position: absolute;
+    font-size: 13px;
+    opacity: 50%;
+    bottom: 0;
+    right: 0;
+    margin: 10px;
+    text-align: right;
+}
+.author img{
+    height: 13px;
+}
