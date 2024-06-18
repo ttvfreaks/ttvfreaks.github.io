@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <title>Кухня для паст Маятника Фуко</title>
     <link rel="icon" href="https://cdn.7tv.app/emote/6425ea32e56d784af090f3ed/2x.webp">
@@ -56,28 +57,64 @@
                     <input type="text" id="searchInput" placeholder="Поиск..." value="">
                 </div>
                 <h2>Треклист</h2>
-                <p>Стрелками ↑ ↓ можно листать список, треклист может быть неполным</p>
+                <p>Стрелками ↑ ↓ можно листать список<br>Треклист может быть неполным</p>
                 <div class="library-items" id="libraryItems">
                 </div>
             </div>
             <div class="kitchen">
-                <h2>Кухня</h2>
-                <h2 class="copy-alert" style="display: none;">Скопировано!</h2>
-                <p>Здесь можно приготовить пасту <img src="https://cdn.7tv.app/emote/627ab230dd9fb5ce4cc59539/1x.webp"/></p>
+                <div class="kitchen-header">
+                    <h2>Кухня <img src="https://cdn.7tv.app/emote/627ab230dd9fb5ce4cc59539/1x.webp"/></h2>
+                    <p>Здесь можно приготовить пасту</p>
+
+                    <h5>Автор:</h5>
+                    <input type="text" id="pasta-author"></input>
+
+                    <h5>Трек:</h5>
+                    <input type="text" id="pasta-song"></input>
+
+                    <h5>Текст пасты:</h5>
+                    <textarea id="new-pasta"></textarea>
+
+                    <div class="cook-pasta">Добавить пасту</div>
+                    <div class="export-pasta">Экспортировать пасты (.json)</div>
+
+                    <h2 class="border-top">Приготовленные пасты</h2>
+                </div>
+
+                <div class="cooked-pastas">
+                    <!-- <div class="cooked-pasta" data-song="104/DOSE/СКРИПТОНИТ - В Аду Сегодня Жарко">
+                        <h5 class="pasta-margin">104/DOSE/СКРИПТОНИТ - В Аду Сегодня Жарко</h5>
+                        <div class="pasta-text pasta-margin">
+                            sodihfsogf suegf9u sgefougsoufgosudg fousgfou gseoug souer uegrouogseourg osuuegrs egrousgeo ugrseoug r
+                        </div>
+                        <div class="delete-pasta pasta-margin">Удалить пасту</div>
+                    </div> -->
+                </div>
             </div>
             <div class="lyrics">
                 <h2>Инфо о треке</h2>
                 <h2 class="copy-alert" style="display: none;">Скопировано!</h2>
-                <p>Ссылка на текст песни (опционально) и видос (опционально)</p>
-                <div id="player"></div>
+                <p>Ссылка на текст песни и видос (может быть нерелевантным)</p>
+                <a href="" class="yt-link">
+                    <i class="fa-brands fa-youtube"></i>YouTube
+                    <i class="fa-solid fa-arrow-up-right-from-square external"></i>
+                    <p class="yt-link-ensure"></p>
+                </a>
+                <a href="" class="genius-link">
+                    Genius (текст трека)
+                    <i class="fa-solid fa-arrow-up-right-from-square external"></i>
+                    <p class="genius-link-ensure"></p>
+                </a>
             </div>
         </div>
         <div class="author">
             <img src="https://cdn.7tv.app/emote/63daf2cf60cfb462b9e1b028/1x.webp"/> страницу создал klabisot<br>
+            у некоторых треков могут быть неправильные ссылки<br>
+            сообщите о неправильных ссылках, пожалуйста<br>
             <a href="https://ttvfreaks.github.io/mf">Библиотека паст Маятник Фуко</a><br>
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="scripts.js"></script>
+    <script src="kitchen_scripts.js"></script>
 </body>
 </html>
