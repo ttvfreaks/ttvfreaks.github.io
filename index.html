@@ -1,6 +1,238 @@
-<a href="https://ttvfreaks.github.io/mf">ЗДЕСЬ ЕСТЬ МАЯТНИК ФУКО Таа</a><br>
-<a href="https://ttvfreaks.github.io/mf_kitchen">ЗДЕСЬ КУХНЯ ДЛЯ ПАСТ МАЯТНИКА ФУКО Таа</a><br>
-<a href="https://ttvfreaks.github.io/where_is_uselessmouth">А ЗДЕСЬ МОЖНО УВИДЕТЬ ГДЕ СЕЙЧАС ЮЛЯ cannyCat</a>
-<br>
-<br>
-ЕСЛИ ХОТИТЕ ДОБАВИТЬ СОБСТВЕННУЮ СТРАНИЧКУ - ОБРАЩАЙТЕСЬ К klabisot
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Супер Смешная Страница</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <header>
+        <h1>Супер Смешная Страница</h1>
+        <p>Нажимайте на всё подряд и смейтесь до слёз!</p>
+    </header>
+
+    <main>
+        <section class="interactive-art">
+            <h2>Нажми меня!</h2>
+            <button class="fun-button" onclick="showRandomJoke()">Нажми сюда!</button>
+            <div id="joke-container"></div>
+        </section>
+
+        <section class="meme-gallery">
+            <h2>Галерея Мемов</h2>
+            <img src="https://i.imgur.com/j6j1xQm.jpg" alt="Мем 1" onclick="rotateImage(this)">
+            <img src="https://i.imgur.com/Q6NWT4y.jpg" alt="Мем 2" onclick="rotateImage(this)">
+            <img src="https://i.imgur.com/h2H1ZCI.jpg" alt="Мем 3" onclick="rotateImage(this)">
+            <img src="https://i.imgur.com/O9zT9Jq.jpg" alt="Мем 4" onclick="rotateImage(this)">
+        </section>
+
+        <section class="funny-gifs">
+            <h2>Смешные Гифки</h2>
+            <img src="https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif" alt="Гифка 1" onclick="playFunnySound()">
+            <img src="https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif" alt="Гифка 2" onclick="playFunnySound()">
+        </section>
+
+        <section class="random-colors">
+            <h2>Изменяй Цвета!</h2>
+            <button class="color-button" onclick="changeColors()">Изменить Цвета</button>
+        </section>
+
+        <section class="pop-up-section">
+            <h2>Нажми, чтобы появились сюрпризы!</h2>
+            <button class="popup-button" onclick="showPopup()">Показать Сюрпризы!</button>
+        </section>
+
+        <section class="spin-wheel">
+            <h2>Колесо Смеха</h2>
+            <button class="spin-button" onclick="spinWheel()">Крутить Колесо</button>
+            <div id="wheel-result"></div>
+        </section>
+
+        <section class="funny-quotes">
+            <h2>Смешные Цитаты</h2>
+            <blockquote onclick="changeQuoteColor(this)">"Я никогда не ошибаюсь. Однажды думал, что ошибся, но ошибался."</blockquote>
+            <blockquote onclick="changeQuoteColor(this)">"Если бы я мог быть какой-нибудь птицей, я бы выбрал птицу, которая не умеет летать. Чтобы было больше времени спать."</blockquote>
+            <blockquote onclick="changeQuoteColor(this)">"Зачем мне мозг? У меня и так проблем хватает!"</blockquote>
+            <blockquote onclick="changeQuoteColor(this)">"Я не ленивый, я просто в энергосберегающем режиме."</blockquote>
+        </section>
+
+        <section class="funny-videos">
+            <h2>Смешные Видео</h2>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/tgbNymZ7vqY" frameborder="0" allowfullscreen></iframe>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/J---aiyznGQ" frameborder="0" allowfullscreen></iframe>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/ZZ5LpwO-An4" frameborder="0" allowfullscreen></iframe>
+        </section>
+
+        <section class="funny-pictures">
+            <h2>Смешные Картинки</h2>
+            <img src="https://i.imgur.com/5w9U7k8.jpg" alt="Смешная картинка 1" onclick="playRandomSound()">
+            <img src="https://i.imgur.com/fvVcm8D.jpg" alt="Смешная картинка 2" onclick="playRandomSound()">
+            <img src="https://i.imgur.com/WoQ5rFy.jpg" alt="Смешная картинка 3" onclick="playRandomSound()">
+            <img src="https://i.imgur.com/JjV4DbG.jpg" alt="Смешная картинка 4" onclick="playRandomSound()">
+        </section>
+
+        <section class="useless-links">
+            <h2>Useless Links</h2>
+            <a href="https://ttvfreaks.github.io/mf">ЗДЕСЬ ЕСТЬ МАЯТНИК ФУКО Таа</a><br>
+            <a href="https://ttvfreaks.github.io/mf_kitchen">ЗДЕСЬ КУХНЯ ДЛЯ ПАСТ МАЯТНИКА ФУКО Таа</a><br>
+            <a href="https://ttvfreaks.github.io/where_is_uselessmouth">А ЗДЕСЬ МОЖНО УВИДЕТЬ ГДЕ СЕЙЧАС ЮЛЯ cannyCat</a>
+            <br>
+            <br>
+            ЕСЛИ ХОТИТЕ ДОБАВИТЬ СОБСТВЕННУЮ СТРАНИЧКУ - ОБРАЩАЙТЕСЬ К klabisot
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Супер Смешная Страница. Смейтесь и наслаждайтесь!</p>
+    </footer>
+
+    <style>
+        *{
+            color: black;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #ff4081;
+            color: #fff;
+            padding: 20px;
+        }
+
+        main {
+            padding: 20px;
+        }
+
+        section {
+            margin-bottom: 30px;
+        }
+
+        section h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        button, img {
+            margin: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover, img:hover {
+            transform: scale(1.1);
+        }
+
+        #joke-container {
+            margin-top: 20px;
+            font-size: 1.5em;
+            color: #ff4081;
+        }
+
+        #wheel-result {
+            margin-top: 20px;
+            font-size: 2em;
+            color: #ff4081;
+        }
+
+        footer {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 0;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+
+    </style>
+
+    <script>
+        const jokes = [
+            "Почему программисты не ходят на природу? Там слишком много багов.",
+            "Почему компьютер замолчал? Он не нашел драйвер.",
+            "Как зовут программиста из Мексики? Сеньор Лупа.",
+            "Почему я всегда шучу про HTML? Потому что это структурно!",
+            "Как программисты зарабатывают на жизнь? Они кодят на Java."
+        ];
+
+        const funnySounds = [
+            'https://www.myinstants.com/media/sounds/trolololololololol.mp3',
+            'https://www.myinstants.com/media/sounds/fart.mp3',
+            'https://www.myinstants.com/media/sounds/cartoon-fall.mp3'
+        ];
+
+        function showRandomJoke() {
+            const jokeContainer = document.getElementById('joke-container');
+            const randomIndex = Math.floor(Math.random() * jokes.length);
+            jokeContainer.textContent = jokes[randomIndex];
+        }
+
+        function rotateImage(image) {
+            const currentRotation = image.style.transform;
+            const newRotation = currentRotation === 'rotate(360deg)' ? 'rotate(0deg)' : 'rotate(360deg)';
+            image.style.transform = newRotation;
+        }
+
+        function playFunnySound() {
+            const audio = new Audio(funnySounds[0]);
+            audio.play();
+        }
+
+        function playRandomSound() {
+            const randomIndex = Math.floor(Math.random() * funnySounds.length);
+            const audio = new Audio(funnySounds[randomIndex]);
+            audio.play();
+        }
+
+        function changeColors() {
+            document.body.style.backgroundColor = getRandomColor();
+            const sections = document.querySelectorAll('section');
+            sections.forEach(section => {
+                section.style.backgroundColor = getRandomColor();
+                section.style.color = getRandomColor();
+            });
+        }
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function showPopup() {
+            alert('Сюрприз! Это очень смешно!');
+            document.body.style.backgroundImage = 'url(https://i.imgur.com/j6j1xQm.jpg)';
+        }
+
+        function spinWheel() {
+            const wheelResult = document.getElementById('wheel-result');
+            const outcomes = [
+                'Вы выиграли кота!',
+                'Вы выиграли поездку на Марс!',
+                'Вы выиграли банку смеха!',
+                'Вы выиграли выходной!'
+            ];
+            const randomIndex = Math.floor(Math.random() * outcomes.length);
+            wheelResult.textContent = outcomes[randomIndex];
+        }
+
+        function changeQuoteColor(quote) {
+            quote.style.color = getRandomColor();
+        }
+    </script>
+</body>
+</html>
+
+
