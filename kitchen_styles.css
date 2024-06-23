@@ -189,6 +189,9 @@ h2{
     box-shadow: none;
     background-color: #171211;
 }
+.kitchen textarea{
+    height: 100px;
+}
 .cook-pasta, .delete-pasta, .export-pasta{
     width: 98%;
     text-align: center;
