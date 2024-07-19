@@ -99,7 +99,7 @@ body{
     vertical-align: top;
     margin-left: 10px;
 
-    width: 150px;
+    width: 120px;
     height: 75px;
 }
 .name-and-lvl > *{
@@ -173,7 +173,7 @@ body{
 /* доп статы */
 .extra-stats{
     position: relative;
-    width: calc(100% - 255px);
+    width: calc(100% - 225px);
     height: 75px;
     margin-left: 10px;
     vertical-align: top;
