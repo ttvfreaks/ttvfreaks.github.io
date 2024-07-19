@@ -166,7 +166,7 @@ body{
     flex: 1;
     justify-content: space-between;
 }
-.additional-info{
+.additional-info, .income{
     font-size: 9px;
     opacity: 50%;
 }
@@ -196,6 +196,9 @@ body{
     flex: 1;
     justify-content: space-between;
 }
+.labels{
+    width: 81px;
+}
 .values{
     overflow: hidden;
     white-space: nowrap;
@@ -211,7 +214,7 @@ body{
     margin-right: 2px;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1110px) {
     .container {
         /* padding: 10px 30px; */
         display: block;
@@ -221,8 +224,11 @@ body{
         width: 100%;
     }
 }
-@media (max-width: 490px) {
+@media (max-width: 540px) {
     .container {
         width: 95%;
+    }
+    .additional-info{
+        display: none;
     }
 }
