@@ -73581,9 +73581,16 @@ $(document).ready(function() {
                        .replaceAll("%maxmorale%", player["morale"]["maximum"])
                        .replaceAll("%maxpolice%", player["policeInterest"]["maximum"])
                        .replaceAll("%maxvision%", player["actionPoints"]["exploring"]["maximum"])
+                       
+                       .replaceAll("%persistence%",  player["characteristics"]["persistence"]["actual"])
+                       .replaceAll("%fortune%",      player["characteristics"]["fortune"]["actual"])
+                       .replaceAll("%diplomacy%",    player["characteristics"]["diplomacy"]["actual"])
+                       .replaceAll("%authority%",    player["characteristics"]["authority"]["actual"])
+                       .replaceAll("%practicality%", player["characteristics"]["practicality"]["actual"])
+                       .replaceAll("%organization%", player["characteristics"]["organization"]["actual"])
             
             if ('currentGame' in player){
-                text = text.replaceAll("%game_label%", '<br>Текущая игра:')
+                text = text.replaceAll("%game_label%", '<br>Игра:')
                            .replaceAll("%game%", '<br>' + player["currentGame"]['name'])
             }
             else{
@@ -73618,6 +73625,5 @@ $(document).ready(function() {
     
     // А ЭТО ЗАКОММЕНТИРУЙТЕ
     addPlayers(test)
-    console.log(sectors_controlled_by)
 
 });

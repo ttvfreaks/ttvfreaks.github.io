@@ -71,7 +71,7 @@ body{
     background-color: #252526;
     border-radius: 20px;
 
-    height: 75px;
+    height: 105px;
     width: calc(100% - 40px);
     margin: 10px 0;
     padding: 20px;
@@ -79,7 +79,7 @@ body{
 
     cursor: default;
 }
-.don>*{
+.don-container>*{
     display: inline-block;
 }
 /* аватарка */
@@ -205,6 +205,20 @@ body{
     text-overflow: ellipsis;
     text-align: right;
     width: 60%;
+}
+/* характеристики дона */
+.don-characteristics{
+    width: 100%;
+    padding-top: 5px;
+
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+
+    font-size: 12px;
+}
+.char-label{
+    opacity: 50%;
 }
 
 /* статы надо отделить от иконок */
