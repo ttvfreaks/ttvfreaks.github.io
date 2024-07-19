@@ -1,0 +1,63 @@
+body{
+    background-image: url("https://mge.family/static/media/back.b75dfd21b5ca0e8cfbbb.png");
+    background-size:cover;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+* {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+
+    color: white;
+}
+
+.container {
+    /* padding: 10px 30px; */
+    display: flex;
+    justify-content: space-around;
+    width: 80%;
+    max-width: 1200px;
+    /* padding: 20px; */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+.column {
+    width: calc(50% - 10px);
+}
+.don{
+    background-color: #252526;
+    border-radius: 20px;
+
+    height: 75px;
+    width: calc(100% - 40px);
+    margin: 10px 0;
+    padding: 20px;
+    text-align: center;
+}
+
+@media (max-width: 1200px) {
+    .container {
+        /* padding: 10px 30px; */
+        display: block;
+        justify-content: center;
+    }
+    .column {
+        width: 100%;
+    }
+}
+
+.author{
+    position: absolute;
+    font-size: 13px;
+    opacity: 50%;
+    bottom: 0;
+    right: 0;
+    margin: 10px;
+    text-align: right;
+}
+.author img{
+    height: 13px;
+}
