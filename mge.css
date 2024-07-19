@@ -1,6 +1,4 @@
 body{
-    background-image: url("https://mge.family/static/media/back.b75dfd21b5ca0e8cfbbb.png");
-    background-size:cover;
     margin: 0;
     padding: 0;
     display: flex;
@@ -8,25 +6,51 @@ body{
     align-items: center;
 }
 * {
-    font-family: "Montserrat", sans-serif;
+    font-family: "PT Serif", sans-serif;
     font-optical-sizing: auto;
     font-style: normal;
 
     color: white;
 }
 
+.bg{
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-image: url("https://mge.family/static/media/back.b75dfd21b5ca0e8cfbbb.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: block;
+    height: 100%;
+    width: 100%;
+    z-index: -10;
+}
+.author{
+    position: fixed;
+    font-size: 13px;
+    opacity: 50%;
+    bottom: 0;
+    right: 0;
+    margin: 10px;
+    text-align: right;
+    z-index: 100;
+}
+.author img{
+    height: 13px;
+}
+
 .container {
-    /* padding: 10px 30px; */
     display: flex;
     justify-content: space-around;
     width: 80%;
     max-width: 1200px;
-    /* padding: 20px; */
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    height: 100%;
 }
 .column {
     width: calc(50% - 10px);
 }
+/* стили плашки донов */
 .don{
     background-color: #252526;
     border-radius: 20px;
@@ -35,7 +59,124 @@ body{
     width: calc(100% - 40px);
     margin: 10px 0;
     padding: 20px;
+    text-align: left;
+
+    cursor: default;
+}
+.don>*{
+    display: inline-block;
+}
+/* аватарка */
+.avatar img{
+    height: 75px;
+    width: 75px;
+    border-radius: 50%;
+}
+/* плашка с лвлами */
+.name-and-lvl{
+    vertical-align: top;
+    margin-left: 10px;
+
+    width: 150px;
+    height: 75px;
+}
+.name-and-lvl > *{
+    display: block;
+}
+.lvl-bar-stats{
+    position: relative;
+    height: 25px;
+    margin-top: 5px;
+}
+.lvl{
+    position: absolute;
+    left: 0;
+
+    width: 25px;
+    height: 25px;
     text-align: center;
+    vertical-align: middle;
+    line-height: 25px;
+    border: 1px solid white;
+    border-radius: 50%;
+
+    font-size: 12px;
+
+    background-color: #252526;
+    z-index: 10;
+}
+.bar{
+    width: calc(100% - 7px);
+    margin-left: 12px;
+    height: 15px;
+    border-top: 2px solid gray;
+    border-bottom: 2px solid gray;
+    
+    position: absolute;
+    top: 5px;
+    right: 0;
+
+    text-align: center;
+    vertical-align: middle;
+    line-height: 15px;
+
+    z-index: 1;
+}
+.exp{
+    margin-left: 15px;
+    font-size: 12px;
+}
+/* статы - битсы и ходы */
+.stats{
+    display: flex;
+    font-size: 12px;
+    margin-top: 10px;
+    flex: 1;
+    justify-content: space-between;
+}
+.additional-info{
+    font-size: 9px;
+    opacity: 50%;
+}
+/* доп статы */
+.extra-stats{
+    position: relative;
+    width: calc(100% - 255px);
+    height: 75px;
+    margin-left: 10px;
+    vertical-align: top;
+}
+.another-stats{
+    position: absolute;
+    bottom: -2px;
+    width: 100%;
+
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+
+    font-size: 12px;
+}
+/* состояния */
+.game-info{
+    display: flex;
+    font-size: 12px;
+    flex: 1;
+    justify-content: space-between;
+}
+.values{
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: right;
+    width: 60%;
+}
+
+/* статы надо отделить от иконок */
+.stats img, .another-stats img{
+    width: 12px;
+    height: 12px;
+    margin-right: 2px;
 }
 
 @media (max-width: 1200px) {
@@ -47,17 +188,4 @@ body{
     .column {
         width: 100%;
     }
-}
-
-.author{
-    position: absolute;
-    font-size: 13px;
-    opacity: 50%;
-    bottom: 0;
-    right: 0;
-    margin: 10px;
-    text-align: right;
-}
-.author img{
-    height: 13px;
 }
