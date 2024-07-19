@@ -20,13 +20,16 @@
     <template id="player-template" type="text/x-jquery-tmpl">
         <div id="%name%" class="don">
             <div class="avatar">
-                <img src="%avatar%"/>
+                <img class="%online%" src="%avatar%"/>
             </div>
             <div class="name-and-lvl">
-                <div class="name">%name% <a href="https://twitch.tv/%name%"><i class="fa-brands fa-twitch"></i></a></div>
+                <div class="name" style="color: %color%">%name% <a href="https://twitch.tv/%name%"><i class="fa-brands fa-twitch" style="color: %color%"></i></a></div>
                 <div class="lvl-bar-stats">
                     <div class="lvl">%lvl%</div>
-                    <div class="bar" style="background: %bar%"><span class="exp">%exp%</span></div>
+                    <div class="bar-container">
+                        <div class="bar" style="width: %bar%%"></div>
+                        <span class="exp">%exp%</span>
+                    </div>
                 </div>
                 <div class="stats">
                     <span class="bits" title="Битсы"><img src="https://mge.family/static/media/bits.2bdb1b14c7ac3b7dd23950a8519ce2ab.svg" alt="bits">%bits%<span class="additional-info">+%income%</span></span>
@@ -37,10 +40,12 @@
             <div class="extra-stats">
                 <div class="game-info">
                     <div class="labels">
+                        Секторы:<br>
                         Состояние:
                         %game_label%
                     </div>
                     <div class="values">
+                        %sectors%
                         %state%
                         %game%
                     </div>
@@ -69,6 +74,9 @@
 
     <div class="bg">
     </div>
+    <div class="demo">
+        Это - демка, а данные - тестовые! Если хотите страничку с актуальной информацией - скачивайте <a style="color: #b4afee;" href="https://github.com/ttvfreaks/ttvfreaks.github.io">здесь</a> <span class="file">mge.html, mge.css и mge.js</span>, в <span class="file">mge.js</span> мотните в конец файла и перекомментируйте несколько строк
+    </div>
     <div class="container">
         <div class="column" id="col-1">
             
@@ -77,6 +85,7 @@
             
         </div>
     </div>
+
     <div class="author">
         <img src="https://cdn.7tv.app/emote/63daf2cf60cfb462b9e1b028/1x.webp"/> страницу создал klabisot<br>
         я никак не аффилирован с актуальными разработчиками ивента<br>
