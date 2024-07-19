@@ -221,3 +221,8 @@ body{
         width: 100%;
     }
 }
+@media (max-width: 490px) {
+    .container {
+        width: 95%;
+    }
+}
