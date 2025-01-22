@@ -31,6 +31,13 @@
             background: #555; 
             width: 30px;
         }
+        
+        audio::-webkit-media-controls-panel {
+            background-color: #202020;
+            color: white;
+            max-width: 50px;
+        }
+
 
         video{
             opacity: 8%;
@@ -130,6 +137,13 @@
         .author img{
             height: 13px;
         }
+        #suck-my-dick-player{
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            margin: 5px;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -154,7 +168,62 @@
         <a href="https://docs.google.com/spreadsheets/d/1xT8SDlwpBTjbFbQs8BUNdhZOojhwS38-K-6Qf0EiYwI/edit?gid=0#gid=0" target="_blank">оригинальная таблица</a>
     </div>
 
+    <div id="suck-my-dick-player">
+        <audio id="suck-my-dick" autoplay loop>
+            <source src="/lego/brick.mp3">
+            Your browser does not support the audio element.
+        </audio>
+        <button id="play-pause"><i class="fa-solid fa-pause"></i></button>
+        <button id="mute"><i class="fa-solid fa-volume-xmark"></i></i></button>
+        <input type="range" id="volume-control" min="0" max="1" step="0.01" value="0.07">
+    </div>
+    <!-- <audio id="suck-my-dick" src="/lego/brick.mp3" autoplay controls loop></audio> -->
+
     <script>
+        var suckMyDick = document.getElementById("suck-my-dick");
+        let lastVolume = 0.07
+        let muted = false
+        suckMyDick.volume = lastVolume;
+        document.addEventListener('DOMContentLoaded', function() {
+            const playPauseButton = document.getElementById('play-pause');
+            const muteButton = document.getElementById('mute');
+            const volumeControl = document.getElementById('volume-control');
+
+            playPauseButton.addEventListener('click', function() {
+                if (suckMyDick.paused) {
+                    suckMyDick.play();
+                    playPauseButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                } else {
+                    suckMyDick.pause();
+                    playPauseButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+                }
+            });
+            muteButton.addEventListener('click', function() {
+                if (muted) {
+                    suckMyDick.volume = lastVolume;
+                    volumeControl.value = lastVolume;
+                    muted = false
+                    muteButton.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
+                } else {
+                    lastVolume = suckMyDick.volume
+                    suckMyDick.volume = 0;
+                    volumeControl.value = 0;
+                    muted = true
+                    muteButton.innerHTML = '<i class="fa-solid fa-volume-low"></i>';
+                }
+            });
+        
+            volumeControl.addEventListener('input', function() {
+                suckMyDick.volume = volumeControl.value;
+                lastVolume = suckMyDick.volume
+            });
+        });
+
+
+
+
+
+
 
         const replacing = {
             '2, 3': ['фикс', 'фикс', 'https://www.legoisland.org/wiki/LEGO_Island_Rebuilder'],
