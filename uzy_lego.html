@@ -158,11 +158,16 @@
         const random = Math.floor(Math.random() * videos.length);
         document.getElementById('ya-lega-video').setAttribute('src', videos[random])
 
+        let audio_index = Math.floor(Math.random() * videos.length);
         async function YA_LEEEEGAAAAAA() {
             const audio = document.getElementById('ya-lega-audio')
-            const random = Math.floor(Math.random() * videos.length);
-            audio.setAttribute('src', videos[random])
+            audio.setAttribute('src', videos[audio_index])
             audio.play();
+
+            audio_index += 1
+            if (audio_index > videos.length){
+                audio_index = 0
+            }
         }
 
         async function loadSheet(url) {
