@@ -248,7 +248,8 @@
     <div class="author">
         <img src="https://cdn.7tv.app/emote/647e08cd628540685215bdbc/1x.webp"/> страницу создал klabisot<br>
         <!-- <a href="https://ttvfreaks.github.io/mf_kitchen">Кухня паст Маятника Фуко</a><br> -->
-        <a href="https://docs.google.com/spreadsheets/d/1xT8SDlwpBTjbFbQs8BUNdhZOojhwS38-K-6Qf0EiYwI/edit?gid=0#gid=0" target="_blank">ссылка на оригинальную таблицу</a>
+        <a href="https://docs.google.com/spreadsheets/d/1xT8SDlwpBTjbFbQs8BUNdhZOojhwS38-K-6Qf0EiYwI/edit?gid=0#gid=0" target="_blank">ссылка на оригинальную таблицу</a><br>
+        скрипт немного неправильно считал игры <img src="https://cdn.7tv.app/emote/01J4RNW84G0006H6JAMR0FAC09/1x.webp"/> их 113, не 115
     </div>
 
     <div id="suck-my-dick-player">
@@ -403,6 +404,10 @@
                 columns[0] = columns[2]
                 columns[2] = buff
 
+                if (index == rows.length - 1){
+                    return
+                }
+
                 if (index > 0 && columns[0] != `""`){
                     if (needToClose) {
                         tableHtml += `</tbody>`
@@ -442,7 +447,7 @@
                 tableHtml += '</tr>';
             });
 
-            document.getElementById('progress').innerText = `${nowPlayingId-1}/${rows.length}`
+            document.getElementById('progress').innerText = `${nowPlayingId-1}/113`
 
             tableHtml += `</tbody>`
             tableHtml += '</table>';
