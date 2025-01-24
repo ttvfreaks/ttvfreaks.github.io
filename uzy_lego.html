@@ -97,10 +97,14 @@
         #progress::before{
             content: "Пройдено игр: ";
         }
+        #now-year::before{
+            content: "Год: ";
+            margin-left: 30px;
+        }
         h1, h2, h5, a{
             color: rgb(221, 146, 96);
         }
-        .header span{
+        #now-playing{
             text-decoration: underline;
             cursor: pointer;
         }
@@ -326,7 +330,7 @@
         <div class="title">
             <h1>МАРАФОН LEGO ИГР</h1>
             <h2><span id="now-playing"></span></h2>
-            <h5 id="progress"></h5>
+            <h5><span id="progress"></span><span id="now-year"></span></h5>
         </div>
         <img src="/lego/lego.webp" onclick="YA_LEEEEGAAAAAA()">
     </div>
@@ -459,6 +463,8 @@
                     }, 800);
                 });
                 $(`#row-${gameRow}`).addClass('playing-this')
+                $('#now-playing').text(currentGame.replaceAll(`"`, ""))
+                $('#now-year').text(currentYear.replaceAll(`"`, ""))
                 $(`tr[data-year="${currentYear.replaceAll(`"`, "")}"] .col-0`).addClass('playing-this')
             } catch (error) {
                 alert(error.message);
@@ -494,9 +500,7 @@
                 }
             })
             years[lastYear] = lastYearCount
-            let nowPlaying = document.getElementById('now-playing')
             let nowPlayingId = 0
-            nowPlaying.innerText = currentGame.replaceAll(`"`, "");
 
             let needToClose = false
             rows.forEach((row, index) => {
