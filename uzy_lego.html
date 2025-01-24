@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <style>
         /* width */
         ::-webkit-scrollbar {
@@ -22,8 +23,8 @@
 
         /* Handle */
         ::-webkit-scrollbar-thumb {
-            background: rgb(160, 160, 160, 0.2);
-            border-radius: 10px;
+            background-color: rgba(56, 56, 56);
+            /* border-radius: 10px; */
         }
 
         /* Handle on hover */
@@ -40,12 +41,13 @@
 
 
         video{
-            opacity: 8%;
+            opacity: 12%;
             margin: 0;
             padding: 0;
             position: absolute;
             width: 100%;
-            height: auto;
+            height: 100vh;
+            object-fit: cover;
             top: 0;
             mask-image: linear-gradient(180deg, rgba(0,0,0,1) 10%, rgba(0,0,0,.8) 30%, rgba(0,0,0,.6) 40%, rgba(0,0,0,0) 100%);
             z-index: -10;
@@ -56,11 +58,19 @@
             font-family: "Fira Sans", serif;
             margin: 0;
             scroll-behavior: smooth;
+
+            height: 100vh;
+            /* overflow: hidden; */
+            /* overscroll-behavior-y: none; */
+            display: flex;
+            flex-direction: column;
         }
         .header{
+            height: 150px;
             width: auto;
             align-items: center;
             text-align: center;
+            margin-bottom: 30px;
         }
         .header > *{
             display: inline-block;
@@ -79,7 +89,7 @@
             font-weight: lighter;
         }
         h1{
-            margin-top: 40px;
+            margin-top: 20px;
         }
         h2::before{
             content: "Сейчас играем в ";
@@ -90,13 +100,33 @@
         h1, h2, h5, a{
             color: rgb(221, 146, 96);
         }
+        .header span{
+            text-decoration: underline;
+            cursor: pointer;
+        }
         
+        #table-container{
+            flex:1;
+            overflow: hidden;
+            overflow-x: none;
+            overflow-y: scroll;
+            margin: 0 auto;
+            width: 85%;
+        }
         table {
             border-collapse: collapse;
-            margin: 0 auto;
-            margin-top: 40px;
-            margin-bottom: 300px;
-            width: 85%;
+            margin-bottom: 200px;
+
+            /* height: 100%;
+            display: flex;
+            flex-direction: column; */
+
+            position: relative;
+        }
+        tbody:first-child{
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         table a{
             font-weight: bold;
@@ -124,11 +154,14 @@
             text-align: center;
         }
         th {
-            background-color: rgb(160, 160, 160, 0.2);
+            background-color: rgba(56, 56, 56);
             text-align: center;
             font-size: 20px;
             font-weight: 600;
             border-bottom: none;
+        }
+        .playing-this{
+            background-color: rgb(221, 146, 96, 0.2);
         }
 
         .author{
@@ -226,6 +259,60 @@
             cursor: pointer; /* Cursor on hover */
             border-radius: 50%;
         }
+
+        @media(max-width: 1000px){
+            #table-container{
+                width: calc(100% - 20px);
+                padding: 0 10px;
+            }
+            table *{
+                font-size: 14px;
+            }
+        }
+
+        @media(max-width: 730px){
+            h1, h2, h5{
+                /* width: auto; */
+                margin: 10px 0;
+            }
+            h1{
+                margin-top: 10px;
+                font-size: 24px;
+            }
+            h2{
+                font-size: 18px;
+            }
+            .header{
+                height: 120px;
+            }
+            .header img{
+                height: 100px;
+            }
+
+            table *{
+                font-size: 12px;
+            }
+        }
+
+        @media(max-width: 570px){
+            h1{
+                margin-top: 10px;
+                font-size: 20px;
+            }
+            h2{
+                font-size: 14px;
+            }
+            .header{
+                height: 90px;
+            }
+            .header img{
+                display: none;
+            }
+
+            table *{
+                font-size: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -238,7 +325,7 @@
         <img src="/lego/lego.webp" onclick="YA_LEEEEGAAAAAA()">
         <div class="title">
             <h1>МАРАФОН LEGO ИГР</h1>
-            <h2><a id="now-playing" href=""></a></h2>
+            <h2><span id="now-playing"></span></h2>
             <h5 id="progress"></h5>
         </div>
         <img src="/lego/lego.webp" onclick="YA_LEEEEGAAAAAA()">
@@ -265,6 +352,7 @@
     <!-- <audio id="suck-my-dick" src="/lego/brick.mp3" autoplay controls loop></audio> -->
 
     <script>
+
         var suckMyDick = document.getElementById("suck-my-dick");
         let lastVolume = 0.07
         let muted = false
@@ -337,6 +425,9 @@
             }
         }
 
+        let currentGame = ''
+        let gameRow = 1
+        let currentYear = 0
         async function loadSheet(url) {
             const sheetUrl = url
             const regex = /\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/;
@@ -358,6 +449,17 @@
                 const csvText = await response.text();
                 const tableHtml = csvToTable(csvText);
                 document.getElementById('table-container').innerHTML = tableHtml;
+
+
+                $(document).ready(function () {
+                    target_offset = $(`#row-${gameRow}`).offset(),
+                    target_top = target_offset.top;
+                    $('#table-container').animate({
+                        scrollTop: target_top - $('#table-container').height()/2
+                    }, 800);
+                });
+                $(`#row-${gameRow}`).addClass('playing-this')
+                $(`tr[data-year="${currentYear.replaceAll(`"`, "")}"] .col-0`).addClass('playing-this')
             } catch (error) {
                 alert(error.message);
             }
@@ -374,14 +476,13 @@
             let years = {}
             let lastYear = "1995"
             let lastYearCount = 1
-            let currentGame = ''
-            let gameRow = 1
             rows.forEach((row, index) => {
                 const columns = row.split(regex);
 
                 if (columns[6] == `""` && currentGame == ""){
                     currentGame = columns[0]
                     gameRow = index
+                    currentYear = lastYear
                 }
                 if (columns[2] == `""`){
                     lastYearCount += 1
@@ -396,7 +497,6 @@
             let nowPlaying = document.getElementById('now-playing')
             let nowPlayingId = 0
             nowPlaying.innerText = currentGame.replaceAll(`"`, "");
-            nowPlaying.setAttribute('href', `#row-${gameRow}`)
 
             let needToClose = false
             rows.forEach((row, index) => {
@@ -416,7 +516,7 @@
                     tableHtml += `<tbody>`
                     needToClose = true
                 }
-                tableHtml += `<tr id="row-${index}">`;
+                tableHtml += `<tr id="row-${index}" data-year="${columns[0].replaceAll("\"", "")}">`;
 
                 if (columns[6] == `""` && nowPlayingId == 0){
                     nowPlayingId = index
@@ -454,6 +554,23 @@
             tableHtml += '</table>';
             return tableHtml;
         }
+
+        $(document).on('wheel', function(event) {
+            var $scrollableDiv = $('#table-container');
+
+            // Отменяем стандартное поведение прокрутки
+            event.preventDefault();
+
+            // Прокручиваем div в зависимости от направления прокрутки
+            $scrollableDiv.scrollTop($scrollableDiv.scrollTop() + event.originalEvent.deltaY);
+        });
+        $('.header span').on('click', function(event) {
+            target_offset = $(`#row-${gameRow}`).offset(),
+            target_top = target_offset.top;
+            $('#table-container').animate({
+                scrollTop: target_top - $('#table-container').height()/2
+            }, 800);
+        });
     </script>
 </body>
 </html>
