@@ -23,6 +23,7 @@
     <main>
         <section class="interactive-art">
             <div class="tale-info">
+                <span style="font-size: 12px; opacity: 50%;">Последнее обновление: 4 сентября 2025 15:35 - информация о второй волне банов</span>
                 <span class="p">
                     <h3 class="date">Предыстория</h3>
                     До событий Юзя часто говорил, что с заработком на твиче трудно, а рекламодателей, готовых работать с
@@ -85,6 +86,11 @@
                     </div>
 
                     <h3 class="date">4 сентября</h3>
+                    Случилась новая волна банов в 5 утра по МСК.<br><br>
+                    <a href="#" id="new1984" onclick="return false;">[+] Скрин</a>
+                        <div class="hidden-content" style="display: none; max-width: 90%;" id="new1984Img">
+                            <img src="img/bans/ban4091.png" alt="random image">
+                        </div>
                     <h3>Дальше будем смотреть</h3>
                 </span>
             </div>
@@ -108,6 +114,13 @@
                             <img src="img/bans/0.jpg" alt="random image">
                         </a>
                         <p class="helping-text">Коллаж происходящего в первый час стрима</p>
+                    </div>
+
+                    <div class="carousel-item">
+                        <a href="img/bans/ban4091.png" target="new">
+                            <img src="img/bans/ban4091.png" alt="random image">
+                        </a>
+                        <p class="helping-text">Вторая волна банов утром 4 сентября</p>
                     </div>
 
                     <div class="carousel-item">
@@ -747,6 +760,19 @@
             } else {
                 tg_prime.style.display = 'none';
                 button_tg_prime.textContent = '[+] Пост про прайм';
+            }
+        });
+
+        const button_new1984 = document.getElementById('new1984');
+        const new1984 = document.getElementById('new1984Img');
+
+        button_new1984.addEventListener('click', () => {
+            if (new1984.style.display === 'none') {
+                new1984.style.display = 'block';
+                button_tbutton_new1984g_prime.textContent = '[-] Скрин';
+            } else {
+                new1984.style.display = 'none';
+                button_new1984.textContent = '[+] Скрин';
             }
         });
     </script>
