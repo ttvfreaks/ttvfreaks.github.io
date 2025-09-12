@@ -160,8 +160,48 @@
             width: 17px;
             height: 17px;
         }
+        .fin{
+            position: absolute;
+            display: block;
+            padding: 30px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            
+            width: fit-content;
+            height: fit-content;
+
+            border: 2px solid white;
+            border-radius: 20px;
+
+            filter: blur();
+            backdrop-filter: blur(10px);
+            background-color: rgba(0,0,0,1);
+
+            text-align: center;
+
+            z-index: 10000;
+        }
+        .fin img{
+            width: 200px;
+        }
+
+        .blur{
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+            backdrop-filter: blur(3px);
+            background-color: rgba(0,0,0,.7);
+        }
     </style>
     <div class="bg"></div>
+    <div class="blur"></div>
+    <div class="fin">
+        Юзя вырвался из этого порочного круга...<br>
+        Но какой ценой...<br><br>
+        <img src="img/3x.avif">
+    </div>
     <div class="container">
         <div class="square center-positioner">
             <img id="uzy" class="" src="https://lh3.googleusercontent.com/d/1TJWNKlfXK8mAmOLf86pCSmkha1zcUqt4"/>
