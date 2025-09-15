@@ -23,7 +23,7 @@
     <main>
         <section class="interactive-art">
             <div class="tale-info">
-                <span style="font-size: 12px; opacity: 50%;">Последнее обновление: 9 сентября 2025 22:52 — Новый скриншот сомнительного бана (раздел "Освещение ситуации", скрин №3), Юзя удалил свой Discord сервер</span>
+                <span style="font-size: 12px; opacity: 50%;">Последнее обновление: 15 сентября 2025 12:40 (UTC+3) — <a href="#updateAnchor">Мэлхарукос и Мэддисон перманентно забанены</a></span>
                 <span class="p">
                     <h3 class="date">Предыстория</h3>
                     До событий Юзя часто говорил, что с заработком на твиче трудно, а рекламодателей, готовых работать с
@@ -99,8 +99,8 @@
                         <img src="img/bans/ban4091.png" style="max-width: 100%;" alt="random image">
                     </div><br><br>
 
-                    <span></span>На канале Юзи и Братишкина <a
-                        href="https://t.me/yalox098/1975">настроена функция кросс-банов</a>. Аутентичность скриншота
+                    <span></span>На канале Юзи и Братишкина <a href="https://t.me/yalox098/1975">настроена функция
+                        кросс-банов</a>. Аутентичность скриншота
                     проверить невозможно, поэтому верить этому или нет — дело каждого.<br><br>
                     <a href="#" id="crossbans" onclick="return false;">[+] Скрин</a>
                     <div class="hidden-content" style="display: none; max-width: 90%;" id="crossbansImg">
@@ -109,20 +109,40 @@
 
                     <h3 class="date">5-8 сентября</h3>
                     Ничего особо выдающегося не произошло. <a href="https://twitchtracker.com/uzya">Статистика последних
-                        стримов</a> перед вами. В дополнение и <a href="https://tgstat.ru/channel/@uzyarich">кол-во подписчиков в ТГ</a>. Думайте.<br><br>
+                        стримов</a> перед вами. В дополнение и <a href="https://tgstat.ru/channel/@uzyarich">кол-во
+                        подписчиков в ТГ</a>. Думайте.<br><br>
                     <div style="width: 100%; height: auto; text-align: center;">
                         <img src="img/Screenshot_20250907_202150.png"
                             style="margin: 0 auto; display: inline-block;"><br>
-                        <img src="img/Screenshot_20250907_204739.png"
-                            style="margin: 0 auto; display: inline-block;">
+                        <img src="img/Screenshot_20250907_204739.png" style="margin: 0 auto; display: inline-block;">
                         <br><br><br>
 
                         <!-- <img src="img/128-1286457_2019-festival-submissions-open-in-may-thats-all.png"
                             style="margin: 0 auto; max-width: 50%;" /> -->
                     </div>
 
-                    <h3 id="updateAnchor" class="date">9 сентября</h3>
+                    <h3 class="date">9 сентября</h3>
                     Юзя удалил Discord сервер.
+
+                    <h3 class="date">10-13 сентября</h3>
+                    Ничего особо выдающегося не произошло.
+
+                    <h3 id="updateAnchor" class="date">14 сентября</h3>
+                    Мэлхарукос и Мэддисон перманентно забанены.<br><br>
+
+                    <a href="#" id="medmel" onclick="return false;">[+] Скрин банов</a><br>
+                    <div class="hidden-content" style="display: none; max-width: 90%;" id="medmelImg">
+                        <img src="img/bans/wtf.png" style="max-width: 100%;" alt="random image">
+                    </div>
+
+                    <a href="#" id="tgmedmelBtn" onclick="return false;">[+] Реакция Мелхарукоса и Мэддисона</a><br>
+                    <div class="hidden-content" style="display: none;" id="tgmedmelText">
+                        <script async src="https://telegram.org/js/telegram-widget.js?22"
+                            data-telegram-post="melhagram/4829" data-width="100%" data-color="343638" data-dark="1"
+                            data-dark-color="FFFFFF"></script><br><br>
+                        <a href="https://t.me/maddysontg/4777">Ссылка на пост Мэддисона</a><br>
+                        <img src="img/medison.png" style="max-width: 100%;" alt="random image">
+                    </div>
 
                 </span>
             </div>
@@ -852,6 +872,32 @@
             } else {
                 crossbans.style.display = 'none';
                 button_crossbans.textContent = '[+] Скрин';
+            }
+        });
+
+        const button_medmel = document.getElementById('medmel');
+        const medmel = document.getElementById('medmelImg');
+
+        button_medmel.addEventListener('click', () => {
+            if (medmel.style.display === 'none') {
+                medmel.style.display = 'block';
+                button_medmel.textContent = '[-] Скрин банов';
+            } else {
+                medmel.style.display = 'none';
+                button_medmel.textContent = '[+] Скрин банов';
+            }
+        });
+
+        const button_tgmedmel = document.getElementById('tgmedmelBtn');
+        const tgmedmel = document.getElementById('tgmedmelText');
+
+        button_tgmedmel.addEventListener('click', () => {
+            if (tgmedmel.style.display === 'none') {
+                tgmedmel.style.display = 'block';
+                button_tgmedmel.textContent = '[-] Реакция Мелхарукоса и Мэддисона';
+            } else {
+                tgmedmel.style.display = 'none';
+                button_tgmedmel.textContent = '[+] Реакция Мелхарукоса и Мэддисона';
             }
         });
     </script>
