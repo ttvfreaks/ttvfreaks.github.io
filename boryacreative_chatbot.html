@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- <link rel="stylesheet" href="css/styles.css?fuckCache=true" /> -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&family=Exo+2:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+    <title>Команды на канале boryacreative</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <style>
+        body {
+            font-family: 'Comfortaa', sans-serif;
+            /* margin: 20px; */
+            background-image: linear-gradient(to top, #460d0d, #7c1a1a);
+            color: #eeeeee;
+            height: 100vh;
+            overflow-y: hidden;
+        }
+
+        h1 {
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        #commands-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .command-row {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: rgb(255, 255, 255, 0.2);
+        }
+
+        .command-name {
+            flex: 0.2;
+            font-weight: bold;
+            color: #eeeeee;
+        }
+
+        .command-aliases {
+            flex: 0.2;
+            color: #fda0a0;
+        }
+
+        .command-description {
+            flex: 0.6;
+            color: #ccc;
+        }
+
+        .header > *{
+            font-family: 'Exo 2', sans-serif;
+            font-size: 1.2em;
+            /* border-bottom: 2px solid #ddd; */
+            /* padding-bottom: 8px; */
+            /* margin-bottom: 5px; */
+            font-weight: bold;
+            text-decoration: underline;
+            color: #eee;
+        }
+
+        .emote{
+            width: auto;
+            height: 30px;
+            vertical-align: middle;
+        }
+    </style>
+
+    <div>
+        <h1>Команды на канале boryacreative</h1>
+        <div id="commands-list">
+            
+            <!-- Commands will be populated here -->
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            async function loadSheet(sheetID, gid = 0) {
+                const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&gid=${gid}`;
+
+                try {
+                    const response = await fetch(csvUrl);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch the data. Ensure the sheet is published and shared as "Anyone with the link can view".');
+                    }
+                    const csvText = await response.text();
+                    return csvText;
+                } catch (error) {
+                    alert(error.message);
+                }
+            }
+
+            async function fillData() {
+                const csv = await loadSheet("1_qud3WzYClh58n5AlrXDKrpoDoCH-lEOR0LVqtqbXGc")
+
+                const regex = /,(?=(?:[^"]*"[^"]*")*(?![^"]*"))/;
+
+                const rows = csv.split('\n');
+                // console.log(csv);
+
+                let commands = `<div class="command-row header">
+                <div class="command-cell command-name">Команда</div>
+                <div class="command-cell command-aliases">Алиасы</div>
+                <div class="command-cell command-description">Описание</div>
+            </div>`;
+                rows.forEach((row, index) => {
+                    const columns = row.split(regex);
+                    commands += `
+                    <div class="command-row">
+                        <div class="command-cell command-name">${columns[0]?.replace(/"/g, '') || ''}</div>
+                        <div class="command-cell command-aliases">${columns[1]?.replace(/"/g, '') || ''}</div>
+                        <div class="command-cell command-description">${columns[2]?.replace(/"/g, '') || ''}</div>
+                    </div>
+                `
+
+                    console.log(columns);
+                })
+                $("#commands-list").html(commands);
+            }
+
+            (async () => {
+                await fillData();
+            })();
+        });
+    </script>
+</body>
+
+</html>
