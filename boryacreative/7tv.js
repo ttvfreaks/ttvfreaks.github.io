@@ -35,34 +35,30 @@
         state.emoteSize = s.emoteSize || 48;
         state.emoteTTL = (s.emoteTTL || 10) * 1000;
         state.proxyUrl = s.emote7tvProxy || '';
+        console.log('[EmoteRain] settings loaded: size=' + state.emoteSize + ' ttl=' + state.emoteTTL + ' proxy=' + (state.proxyUrl || 'none'));
       }
     } catch (e) {}
   }
 
   /* ===== 7TV API (через Cloudflare Worker для обхода CORS) ===== */
   function fetch7TVEmotes(channel) {
-    var apiUrl = 'https://api.7tv.io/v3/gql';
-    var body = JSON.stringify({
-      query: 'query { userByConnection(platform: TWITCH, username: "' + channel + '") { id emote_set { emotes { id name data { host { url } } } } } }',
-    });
+    var apiUrl = 'https://api.7tv.io/v3/users/twitch/' + encodeURIComponent(channel);
 
     var url = state.proxyUrl
       ? state.proxyUrl + '?url=' + encodeURIComponent(apiUrl)
       : apiUrl;
 
-    return fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: body,
-    })
+    console.log('[EmoteRain] fetching 7TV emotes from:', url);
+
+    return fetch(url)
       .then(function (res) {
+        console.log('[EmoteRain] 7TV API response status:', res.status);
         if (!res.ok) throw new Error('7TV API error ' + res.status);
         return res.json();
       })
-      .then(function (json) {
-        var user = json.data && json.data.userByConnection;
-        if (!user) throw new Error('7TV: user not found');
-        var emotes = (user.emote_set && user.emote_set.emotes) || [];
+      .then(function (data) {
+        var emotes = (data.emote_set && data.emote_set.emotes) || [];
+        console.log('[EmoteRain] 7TV raw emotes count:', emotes.length);
         state.emotes7tv.clear();
         emotes.forEach(function (em) {
           var hostUrl = em.data && em.data.host && em.data.host.url;
@@ -70,9 +66,10 @@
             state.emotes7tv.set(em.name, 'https:' + hostUrl + '/' + em.id + '/4x.webp');
           }
         });
+        console.log('[EmoteRain] 7TV loaded ' + state.emotes7tv.size + ' emotes. Names:', Array.from(state.emotes7tv.keys()));
       })
       .catch(function (e) {
-        console.warn('[7tv.js] ' + e.message);
+        console.warn('[EmoteRain] 7TV fetch failed: ' + e.message);
       });
   }
 
@@ -85,6 +82,7 @@
     var nick = 'justinfan' + Math.floor(Math.random() * 99999);
 
     ws.onopen = function () {
+      console.log('[EmoteRain] IRC connected, joining #' + state.channel);
       ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
       ws.send('NICK ' + nick);
       ws.send('JOIN #' + state.channel);
@@ -100,18 +98,24 @@
           ws.send('PONG ' + (payload ? ':' + payload[1] : ':tmi.twitch.tv'));
           continue;
         }
-        handleIRCMessage(line);
+        if (line.indexOf('PRIVMSG') !== -1) {
+          handleIRCMessage(line);
+        }
       }
     };
 
     ws.onclose = function () {
+      console.log('[EmoteRain] IRC disconnected');
       state.ws = null;
       if (state.running) {
+        console.log('[EmoteRain] IRC reconnecting in ' + CONFIG.RECONNECT_DELAY + 'ms');
         state.reconnectTimer = setTimeout(function () { connectIRC(); }, CONFIG.RECONNECT_DELAY);
       }
     };
 
-    ws.onerror = function () {};
+    ws.onerror = function (e) {
+      console.warn('[EmoteRain] IRC error:', e);
+    };
   }
 
   function disconnectIRC() {
@@ -136,6 +140,7 @@
       if (emotesStr && emotesStr !== '/') {
         var entries = emotesStr.split('/');
         var spawned = 0;
+        console.log('[EmoteRain] IRC msg with emotes:', message.replace(/\u200B/g, '').trim());
         for (var e = 0; e < entries.length && spawned < CONFIG.MAX_EMOTES_PER_MSG; e++) {
           var parts = entries[e].split(':');
           if (parts.length < 2) continue;
@@ -145,6 +150,7 @@
             var pos = ranges[r].split('-').map(Number);
             var name = message.slice(pos[0], pos[1] + 1);
             if (name) {
+              console.log('[EmoteRain] detected twitch emote:', name, '(id=' + emoteId + ')');
               spawnEmote(name, 'https://static-cdn.jtvnw.net/emoticons/v2/' + emoteId + '/default/dark/3.0');
               spawned++;
             }
@@ -157,14 +163,20 @@
     for (var w = 0; w < words.length; w++) {
       var url = state.emotes7tv.get(words[w]);
       if (url) {
+        console.log('[EmoteRain] detected 7tv emote:', words[w]);
         spawnEmote(words[w], url);
       }
     }
   }
 
   /* ===== EMOTE RAIN ===== */
+  var spawnCount = 0;
+
   function spawnEmote(name, url) {
     if (!state.running) return;
+
+    spawnCount++;
+    console.log('[EmoteRain] spawn #' + spawnCount + ': ' + name);
 
     var size = state.emoteSize;
     var margin = size;
@@ -279,10 +291,11 @@
   /* ===== PUBLIC API ===== */
   window.emoteRain = {
     start: function (channel) {
+      console.log('[EmoteRain] START requested for channel:', channel);
       if (state.running) this.stop();
 
       channel = channel.trim().toLowerCase();
-      if (!channel) return;
+      if (!channel) { console.warn('[EmoteRain] empty channel'); return; }
 
       state.channel = channel;
       readSettings();
@@ -295,9 +308,12 @@
       }
 
       state.running = true;
+      spawnCount = 0;
+      console.log('[EmoteRain] animation loop started');
 
       var self = this;
       fetch7TVEmotes(channel).then(function () {
+        console.log('[EmoteRain] 7TV fetch done, connecting IRC...');
         if (state.running) connectIRC();
       });
 
@@ -305,6 +321,7 @@
     },
 
     stop: function () {
+      console.log('[EmoteRain] STOP');
       state.running = false;
       disconnectIRC();
 
@@ -313,10 +330,12 @@
         state.animFrame = null;
       }
 
+      console.log('[EmoteRain] removing ' + state.particles.length + ' particles');
       for (var i = 0; i < state.particles.length; i++) {
         state.particles[i].el.remove();
       }
       state.particles = [];
+      spawnCount = 0;
     },
 
     isRunning: function () {
