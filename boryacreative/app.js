@@ -36,6 +36,7 @@ const DEFAULT_SETTINGS = {
   emoteChannel: '',
   emoteSize: 48,
   emoteTTL: 10,
+  emote7tvProxy: '',
 };
 
 const NICKNAME_PLACEHOLDERS = [
@@ -132,6 +133,7 @@ function populateSettingsUI() {
   document.getElementById('set-radius-element-val').textContent = settings.radiusElement;
   document.getElementById('set-custom-css').value = settings.customCSS;
   document.getElementById('set-emote-channel').value = settings.emoteChannel || '';
+  document.getElementById('set-7tv-proxy').value = settings.emote7tvProxy || '';
   document.getElementById('set-emote-size').value = settings.emoteSize;
   document.getElementById('set-emote-size-val').textContent = settings.emoteSize;
   document.getElementById('set-emote-ttl').value = settings.emoteTTL;
@@ -164,6 +166,7 @@ function gatherSettingsFromUI() {
     emoteChannel: document.getElementById('set-emote-channel').value,
     emoteSize: parseInt(document.getElementById('set-emote-size').value),
     emoteTTL: parseInt(document.getElementById('set-emote-ttl').value),
+    emote7tvProxy: document.getElementById('set-7tv-proxy').value,
   };
 }
 

@@ -12,6 +12,7 @@
     emoteTTL: 10000,
     container: null,
     reconnectTimer: null,
+    proxyUrl: '',
     msgCount: 0,
   };
 
@@ -33,17 +34,23 @@
         var s = JSON.parse(saved);
         state.emoteSize = s.emoteSize || 48;
         state.emoteTTL = (s.emoteTTL || 10) * 1000;
+        state.proxyUrl = s.emote7tvProxy || '';
       }
     } catch (e) {}
   }
 
-  /* ===== 7TV API (GraphQL, может работать без CORS-прокси) ===== */
+  /* ===== 7TV API (через Cloudflare Worker для обхода CORS) ===== */
   function fetch7TVEmotes(channel) {
+    var apiUrl = 'https://api.7tv.io/v3/gql';
     var body = JSON.stringify({
       query: 'query { userByConnection(platform: TWITCH, username: "' + channel + '") { id emote_set { emotes { id name data { host { url } } } } } }',
     });
 
-    return fetch('https://api.7tv.io/v3/gql', {
+    var url = state.proxyUrl
+      ? state.proxyUrl + '?url=' + encodeURIComponent(apiUrl)
+      : apiUrl;
+
+    return fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: body,
