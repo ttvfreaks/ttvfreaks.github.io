@@ -9,6 +9,7 @@
   --accent: #ff0000;
   --accent-hover: #cc0000;
   --accent-dim: rgba(255, 0, 0, 0.15);
+  --color-opponent: #0066ff;
   --border: #2d2d31;
   --radius-card: 8px;
   --radius-element: 6px;
@@ -17,6 +18,7 @@
   --font-size-heading: 26px;
   --font-size-game: 14px;
   --font-size-battle: 64px;
+  --font-size-score: 26px;
   --bg-image: none;
   --bg-opacity: 1;
 }
@@ -435,14 +437,87 @@ textarea {
 }
 
 /* ===== BATTLE MODE ===== */
+
+/* Score bar (inside overview, bottom) */
+.battle-score {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 20px 30px 20px;
+  border-top: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: #1f1f23;;
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+  width: fit-content;
+}
+
+.battle-score.hidden {
+  display: none;
+}
+
+.battle-score:not(.hidden) {
+  display: flex;
+}
+
+.score-entry {
+  font-size: var(--font-size-score);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 8px;
+}
+
+.score-name {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: fit-content;
+}
+
+.score-streamer .score-name {
+  color: var(--accent);
+}
+
+.score-opponent .score-name {
+  color: var(--color-opponent);
+}
+
+.score-num {
+  margin-left: 40px;
+  font-weight: 800;
+  line-height: 1.2;
+  min-width: 24px;
+  text-align: right;
+}
+
+.score-streamer .score-num {
+  color: var(--accent);
+}
+
+.score-opponent .score-num {
+  color: var(--color-opponent);
+}
+
+.score-divider {
+  width: 80px;
+  height: 1px;
+  background: var(--border);
+  margin: 10px 0;
+}
+
 .battle-phase {
   display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
+  flex: 1;
   width: 100%;
   position: relative;
+  min-height: 0;
 }
 
 .battle-phase.active {
@@ -589,7 +664,8 @@ textarea {
   gap: 16px;
   width: 100%;
   max-width: 1300px;
-  height: calc(100% - 80px);
+  flex: 1;
+  min-height: 0;
   align-items: start;
 }
 
@@ -612,6 +688,16 @@ textarea {
   border-bottom: 2px solid var(--border);
 }
 
+.first-streamer{
+  color: var(--accent)
+}
+.neutral-games{
+  color: var(--text-primary)
+}
+.second-streamer{
+  color: var(--color-opponent)
+}
+
 .overview-games {
   display: flex;
   flex-direction: column;
@@ -621,32 +707,87 @@ textarea {
 }
 
 .overview-game {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  padding: 7px 12px;
-  text-align: center;
-  cursor: pointer;
+  padding: 5px 6px;
   transition: all 0.2s ease;
   font-size: var(--font-size-game);
   font-weight: 500;
   line-height: 1.3;
 }
 
-.overview-game:hover {
-  border-color: var(--accent);
-  background: var(--bg-hover);
+.game-name {
+  flex: 1;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.overview-game.dimmed {
+.game-btn {
+  width: 18px;
+  height: 18px;
+  border: 2px solid;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  background: transparent;
+  transition: opacity 0.15s ease, transform 0.15s ease, background 0.15s ease;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.overview-game:hover .game-btn {
   opacity: 0.3;
-  text-decoration: line-through;
-  border-color: transparent;
+  pointer-events: auto;
 }
 
-.overview-game.dimmed:hover {
-  opacity: 0.5;
-  border-color: var(--text-muted);
+.game-btn:hover {
+  opacity: 0.7 !important;
+  transform: scale(1.15);
+}
+
+.game-btn.active {
+  opacity: 1 !important;
+  pointer-events: auto;
+}
+
+.game-btn-s {
+  border-color: var(--accent);
+}
+
+.game-btn-s.active {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+.game-btn-o.active {
+  background: var(--color-opponent);
+  box-shadow: 0 0 6px var(--color-opponent);
+}
+
+.game-btn-o {
+  border-color: var(--color-opponent);
+}
+
+.game-btn-o.active {
+  background: var(--color-opponent);
+  box-shadow: 0 0 8px rgba(0, 102, 255, 0.4);
+}
+
+.overview-game.winner-streamer {
+  border-color: var(--accent);
+  background: #1f0808;
+}
+
+.overview-game.winner-opponent {
+  border-color: var(--color-opponent);
+  background: #080820;
 }
 
 /* ===== SETTINGS MODE ===== */

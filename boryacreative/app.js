@@ -13,6 +13,7 @@ const state = {
     queue: [],
     index: -1,
     isTyping: false,
+    wins: { streamer: 0, opponent: 0 },
   },
 };
 
@@ -22,10 +23,12 @@ const DEFAULT_SETTINGS = {
   fontSizeHeading: 26,
   fontSizeGame: 14,
   fontSizeBattle: 64,
+  fontSizeScore: 26,
   bgColor: '#0e0e10',
   bgImage: '',
   textColor: '#efeff1',
   accentColor: '#ff0000',
+  opponentColor: '#0066ff',
   bgOpacity: 100,
   radiusCard: 8,
   radiusElement: 6,
@@ -63,6 +66,8 @@ function applySettings() {
   root.style.setProperty('--font-size-heading', settings.fontSizeHeading + 'px');
   root.style.setProperty('--font-size-game', settings.fontSizeGame + 'px');
   root.style.setProperty('--font-size-battle', settings.fontSizeBattle + 'px');
+  root.style.setProperty('--font-size-score', settings.fontSizeScore + 'px');
+  root.style.setProperty('--color-opponent', settings.opponentColor);
   root.style.setProperty('--bg-primary', settings.bgColor);
   root.style.setProperty('--text-primary', settings.textColor);
   root.style.setProperty('--accent', settings.accentColor);
@@ -106,12 +111,16 @@ function populateSettingsUI() {
   document.getElementById('set-font-size-game-val').textContent = settings.fontSizeGame;
   document.getElementById('set-font-size-battle').value = settings.fontSizeBattle;
   document.getElementById('set-font-size-battle-val').textContent = settings.fontSizeBattle;
+  document.getElementById('set-font-size-score').value = settings.fontSizeScore;
+  document.getElementById('set-font-size-score-val').textContent = settings.fontSizeScore;
   document.getElementById('set-bg-color').value = settings.bgColor;
   document.getElementById('set-bg-color-hex').textContent = settings.bgColor;
   document.getElementById('set-text-color').value = settings.textColor;
   document.getElementById('set-text-color-hex').textContent = settings.textColor;
   document.getElementById('set-accent-color').value = settings.accentColor;
   document.getElementById('set-accent-color-hex').textContent = settings.accentColor;
+  document.getElementById('set-opponent-color').value = settings.opponentColor;
+  document.getElementById('set-opponent-color-hex').textContent = settings.opponentColor;
   document.getElementById('set-bg-opacity').value = settings.bgOpacity;
   document.getElementById('set-bg-opacity-val').textContent = settings.bgOpacity;
   document.getElementById('set-radius-card').value = settings.radiusCard;
@@ -134,10 +143,12 @@ function gatherSettingsFromUI() {
     fontSizeHeading: parseInt(document.getElementById('set-font-size-heading').value),
     fontSizeGame: parseInt(document.getElementById('set-font-size-game').value),
     fontSizeBattle: parseInt(document.getElementById('set-font-size-battle').value),
+    fontSizeScore: parseInt(document.getElementById('set-font-size-score').value),
     bgColor: document.getElementById('set-bg-color').value,
     bgImage: settings.bgImage,
     textColor: document.getElementById('set-text-color').value,
     accentColor: document.getElementById('set-accent-color').value,
+    opponentColor: document.getElementById('set-opponent-color').value,
     bgOpacity: parseInt(document.getElementById('set-bg-opacity').value),
     radiusCard: parseInt(document.getElementById('set-radius-card').value),
     radiusElement: parseInt(document.getElementById('set-radius-element').value),
@@ -169,6 +180,9 @@ function setupSettings() {
   document.getElementById('set-font-size-battle').addEventListener('input', function () {
     document.getElementById('set-font-size-battle-val').textContent = this.value;
   });
+  document.getElementById('set-font-size-score').addEventListener('input', function () {
+    document.getElementById('set-font-size-score-val').textContent = this.value;
+  });
   document.getElementById('set-bg-opacity').addEventListener('input', function () {
     document.getElementById('set-bg-opacity-val').textContent = this.value;
   });
@@ -188,6 +202,9 @@ function setupSettings() {
   });
   document.getElementById('set-accent-color').addEventListener('input', function () {
     document.getElementById('set-accent-color-hex').textContent = this.value;
+  });
+  document.getElementById('set-opponent-color').addEventListener('input', function () {
+    document.getElementById('set-opponent-color-hex').textContent = this.value;
   });
 
   // Background image
@@ -233,7 +250,6 @@ function setupSettings() {
     applySettings();
     saveSettings();
   });
-
 }
 
 // ===== MODE SWITCHING =====
@@ -287,7 +303,8 @@ function updateCategoryTitles() {
 function initPrep() {
   const container = document.getElementById('prep-categories');
   const keys = ['neutral', 'streamer', 'opponent'];
-  const colors = ['#ffaa00', '#ff0000', '#0066ff'];
+  const opponentColor = getComputedStyle(document.documentElement).getPropertyValue('--color-opponent').trim() || '#0066ff';
+  const colors = ['#ffaa00', '#ff0000', opponentColor];
 
   container.innerHTML = '';
   keys.forEach(function (key, i) {
@@ -539,6 +556,7 @@ function startBattle(data) {
   state.battle.queue = buildGameQueue(data);
   state.battle.phase = 'reveal';
   state.battle.isTyping = false;
+  state.battle.wins = { streamer: 0, opponent: 0 };
 
   document.getElementById('battle-upload').classList.remove('active');
   document.getElementById('battle-reveal').classList.add('active');
@@ -548,6 +566,11 @@ function startBattle(data) {
   document.getElementById('reveal-cat').textContent = '';
   document.getElementById('reveal-counter').textContent = '';
   document.getElementById('reveal-hint').classList.remove('hidden');
+
+  // Set score names for later
+  document.getElementById('score-s-name').textContent = data.streamerName || 'Стример #1';
+  document.getElementById('score-o-name').textContent = data.opponentName || 'Стример #2';
+  updateScoreDisplay();
 }
 
 function buildGameQueue(data) {
@@ -629,13 +652,71 @@ function showBattleOverview() {
     gameList.forEach(name => {
       const card = document.createElement('div');
       card.className = 'overview-game';
-      card.textContent = name;
-      card.addEventListener('click', function () {
-        this.classList.toggle('dimmed');
+      card.dataset.winner = 'none';
+
+      const btnS = document.createElement('button');
+      btnS.className = 'game-btn game-btn-s';
+      btnS.title = 'Победа ' + data.streamerName;
+      btnS.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const card = this.parentElement;
+        const current = card.dataset.winner;
+        if (current === 'streamer') {
+          card.dataset.winner = 'none';
+          card.classList.remove('winner-streamer');
+          this.classList.remove('active');
+          card.querySelector('.game-btn-o').classList.remove('active');
+          state.battle.wins.streamer--;
+        } else {
+          card.dataset.winner = 'streamer';
+          card.classList.remove('winner-opponent');
+          card.classList.add('winner-streamer');
+          this.classList.add('active');
+          card.querySelector('.game-btn-o').classList.remove('active');
+          if (current === 'opponent') state.battle.wins.opponent--;
+          state.battle.wins.streamer++;
+        }
+        updateScoreDisplay();
       });
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'game-name';
+      nameSpan.textContent = name;
+
+      const btnO = document.createElement('button');
+      btnO.className = 'game-btn game-btn-o';
+      btnO.title = 'Победа ' + data.opponentName;
+      btnO.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const card = this.parentElement;
+        const current = card.dataset.winner;
+        if (current === 'opponent') {
+          card.dataset.winner = 'none';
+          card.classList.remove('winner-opponent');
+          this.classList.remove('active');
+          card.querySelector('.game-btn-s').classList.remove('active');
+          state.battle.wins.opponent--;
+        } else {
+          card.dataset.winner = 'opponent';
+          card.classList.remove('winner-streamer');
+          card.classList.add('winner-opponent');
+          this.classList.add('active');
+          card.querySelector('.game-btn-s').classList.remove('active');
+          if (current === 'streamer') state.battle.wins.streamer--;
+          state.battle.wins.opponent++;
+        }
+        updateScoreDisplay();
+      });
+
+      card.appendChild(btnS);
+      card.appendChild(nameSpan);
+      card.appendChild(btnO);
       gamesEl.appendChild(card);
     });
   });
+
+  document.getElementById('battle-score').classList.remove('hidden');
+  updateScoreDisplay();
 }
 
 function resetBattle() {
@@ -645,6 +726,7 @@ function resetBattle() {
     queue: [],
     index: -1,
     isTyping: false,
+    wins: { streamer: 0, opponent: 0 },
   };
   stopTypewriter();
 
@@ -656,7 +738,14 @@ function resetBattle() {
   document.getElementById('reveal-cat').textContent = '';
   document.getElementById('reveal-counter').textContent = '';
 
+  document.getElementById('battle-score').classList.add('hidden');
+
   document.querySelectorAll('.overview-col').forEach(col => { col.style.display = 'flex'; });
+}
+
+function updateScoreDisplay() {
+  document.getElementById('score-s-num').textContent = state.battle.wins.streamer;
+  document.getElementById('score-o-num').textContent = state.battle.wins.opponent;
 }
 
 // ===== TYPEWRITER =====

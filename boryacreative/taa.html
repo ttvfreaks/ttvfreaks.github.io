@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?nocache=sosal">
 </head>
 <body>
 
@@ -89,16 +89,27 @@
       </button>
       <div class="overview-grid">
         <div class="overview-col" data-cat="streamer">
-          <h2 class="overview-col-title"></h2>
+          <h2 class="overview-col-title first-streamer"></h2>
           <div class="overview-games"></div>
         </div>
         <div class="overview-col" data-cat="neutral">
-          <h2 class="overview-col-title"></h2>
+          <h2 class="overview-col-title neutral-games"></h2>
           <div class="overview-games"></div>
         </div>
         <div class="overview-col" data-cat="opponent">
-          <h2 class="overview-col-title"></h2>
+          <h2 class="overview-col-title second-streamer"></h2>
           <div class="overview-games"></div>
+        </div>
+      </div>
+      <div id="battle-score" class="battle-score hidden">
+        <div class="score-entry score-streamer">
+          <span class="score-name" id="score-s-name"></span>
+          <span class="score-num" id="score-s-num">0</span>
+        </div>
+        <div class="score-divider"></div>
+        <div class="score-entry score-opponent">
+          <span class="score-name" id="score-o-name"></span>
+          <span class="score-num" id="score-o-num">0</span>
         </div>
       </div>
     </div>
@@ -114,7 +125,7 @@
     <div class="settings-tabs">
       <label class="settings-tab active" data-tab="basic">Основные</label>
       <label class="settings-tab" data-tab="advanced">Дополнительные</label>
-      <label class="settings-tab is-hidden" data-tab="custom">Кастомный CSS</label>
+      <label class="settings-tab" data-tab="custom">Кастомный CSS</label>
     </div>
 
     <div class="settings-content">
@@ -144,6 +155,10 @@
         <div class="setting-row">
           <label>Текст боевого режима: <span class="setting-val" id="set-font-size-battle-val">64</span>px</label>
           <input type="range" id="set-font-size-battle" min="24" max="120" value="64">
+        </div>
+        <div class="setting-row">
+          <label>Текст счёта: <span class="setting-val" id="set-font-size-score-val">26</span>px</label>
+          <input type="range" id="set-font-size-score" min="14" max="56" value="26">
         </div>
         <div class="setting-row">
           <label>Цвет фона</label>
@@ -179,6 +194,13 @@
           </div>
         </div>
         <div class="setting-row">
+          <label>Цвет второго стримера</label>
+          <div class="setting-color-wrap">
+            <input type="color" id="set-opponent-color" value="#0066ff">
+            <span class="setting-hex" id="set-opponent-color-hex">#0066ff</span>
+          </div>
+        </div>
+        <div class="setting-row">
           <label>Затемнение фона: <span class="setting-val" id="set-bg-opacity-val">100</span>%</label>
           <input type="range" id="set-bg-opacity" min="30" max="100" value="100">
         </div>
@@ -192,7 +214,7 @@
         </div>
       </div>
 
-      <div class="settings-pane is-hidden" id="settings-custom">
+      <div class="settings-pane" id="settings-custom">
         <p class="settings-note">Стили из этого блока переопределяют все настройки выше. Вставьте свой CSS-код.</p>
         <textarea id="set-custom-css" spellcheck="false"></textarea>
       </div>
@@ -232,7 +254,8 @@
         <h2>Боевой режим</h2>
         <p>Загрузите JSON-файл, созданный в режиме подготовки, через drag'n'drop или кнопку выбора файла.</p>
         <p>После загрузки нажимайте в любом месте экрана — игры будут открываться по одной с анимацией печатающегося текста. Порядок раскрытия: сначала нейтральные, потом игры стримеров.</p>
-        <p>Когда все игры раскрыты, откроется обзорный экран с тремя колонками. Клик по плашке с игрой делает её полупрозрачной (отмечает как сыгранную).</p>
+        <p>Когда все игры раскрыты, откроется обзорный экран с тремя колонками. У каждой игры есть две кнопки по краям: красная — победа первого стримера, синяя — победа второго. Клик по кнопке отмечает победителя, повторный клик снимает отметку.</p>
+        <p>Снизу отображается счёт с количеством выигранных игр у каждого участника.</p>
       </div>
 
       <div class="faq-section">
@@ -241,7 +264,7 @@
         <ul>
           <li><strong>Основные</strong> — шрифт (семейство и размеры), цвет фона, фоновое изображение, размер заголовков и игр в списках, текст боевого режима.</li>
           <li><strong>Дополнительные</strong> — цвет текста, акцентный цвет, затемнение фона, скругление углов.</li>
-          <!-- <li><strong>Кастомный CSS</strong> — для тонкой настройки стиля (скрыт, но доступен при необходимости).</li> -->
+          <li><strong>Кастомный CSS</strong> — для тонкой настройки стиля (скрыт, но доступен при необходимости).</li>
         </ul>
         <p>Изменения сохраняются в браузере и восстанавливаются при повторном открытии страницы.</p>
       </div>
@@ -253,6 +276,6 @@
     </div>
   </section>
 
-  <script src="app.js"></script>
+  <script src="app.js?nocache=sosal"></script>
 </body>
 </html>
