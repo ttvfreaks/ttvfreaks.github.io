@@ -269,11 +269,11 @@ function setupSettings() {
   document.getElementById('emote-rain-start').addEventListener('click', function () {
     const channel = document.getElementById('set-emote-channel').value.trim();
     if (!channel) { alert('Введите название Twitch канала'); return; }
-    settings.emoteChannel = channel;
-    settings.emoteSize = parseInt(document.getElementById('set-emote-size').value);
-    settings.emoteTTL = parseInt(document.getElementById('set-emote-ttl').value);
+    settings = gatherSettingsFromUI();
+    applySettings();
     saveSettings();
     if (window.emoteRain) {
+      window.emoteRain.updateSettings();
       window.emoteRain.start(channel);
       document.getElementById('emote-rain-status').textContent = 'Активен';
       document.getElementById('emote-rain-status').style.color = 'var(--accent)';
