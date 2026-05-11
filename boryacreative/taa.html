@@ -1,1 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Турнир: Арена Адаптации</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
 
+  <nav class="nav-bar">
+    <button class="nav-btn active" data-mode="prep" title="Подготовка">
+      <i class="fas fa-cog"></i>
+    </button>
+    <button class="nav-btn" data-mode="battle" title="Боевой режим">
+      <i class="fas fa-gamepad"></i>
+    </button>
+    <button class="nav-btn" data-mode="settings" title="Настройки">
+      <i class="fas fa-sliders-h"></i>
+    </button>
+    <button class="nav-btn" data-mode="faq" title="FAQ">
+      <i class="fas fa-question"></i>
+    </button>
+  </nav>
+
+  <!-- ========== PREPARATION MODE ========== -->
+  <section id="mode-prep" class="mode active">
+    <div class="mode-header">
+      <h1>Подготовка к турниру</h1>
+      <span class="mode-subtitle">Заполните списки игр для каждой категории</span>
+    </div>
+
+    <div class="prep-players">
+      <div class="prep-field">
+        <label>Имя стримера</label>
+        <input type="text" id="prep-streamer" placeholder="Например: Borya" spellcheck="false">
+      </div>
+      <div class="prep-field">
+        <label>Имя оппонента</label>
+        <input type="text" id="prep-opponent" placeholder="Например: Opponent" spellcheck="false">
+      </div>
+    </div>
+
+    <div id="prep-categories"></div>
+
+    <div class="prep-actions">
+      <button class="btn btn-secondary" id="prep-import-btn">
+        <i class="fas fa-folder-open"></i> Импорт JSON
+      </button>
+      <button class="btn btn-primary" id="prep-export-btn">
+        <i class="fas fa-download"></i> Экспорт JSON
+      </button>
+    </div>
+    <input type="file" id="prep-file-input" accept=".json" hidden>
+  </section>
+
+  <!-- ========== BATTLE MODE ========== -->
+  <section id="mode-battle" class="mode">
+    <div id="battle-upload" class="battle-phase active">
+      <div id="battle-dropzone" class="dropzone">
+        <div class="dropzone-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+        <p class="dropzone-title">Перетащите JSON-файл сюда</p>
+        <p class="dropzone-sub">или нажмите для выбора файла</p>
+      </div>
+      <input type="file" id="battle-file-input" accept=".json" hidden>
+    </div>
+
+    <div id="battle-reveal" class="battle-phase hidden">
+      <button class="btn btn-secondary battle-reset-btn" id="battle-reset-reveal">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="reveal-header">
+        <div class="reveal-cat" id="reveal-cat"></div>
+        <div class="reveal-counter" id="reveal-counter"></div>
+      </div>
+      <div class="reveal-body">
+        <div class="reveal-name" id="reveal-name"></div>
+      </div>
+      <div class="reveal-hint" id="reveal-hint">Нажмите в любом месте</div>
+    </div>
+
+    <div id="battle-overview" class="battle-phase hidden">
+      <button class="btn btn-secondary battle-reset-btn" id="battle-reset-overview">
+        <i class="fas fa-undo"></i> Заново
+      </button>
+      <div class="overview-grid">
+        <div class="overview-col" data-cat="streamer">
+          <h2 class="overview-col-title"></h2>
+          <div class="overview-games"></div>
+        </div>
+        <div class="overview-col" data-cat="neutral">
+          <h2 class="overview-col-title"></h2>
+          <div class="overview-games"></div>
+        </div>
+        <div class="overview-col" data-cat="opponent">
+          <h2 class="overview-col-title"></h2>
+          <div class="overview-games"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SETTINGS MODE ========== -->
+  <section id="mode-settings" class="mode">
+    <div class="mode-header">
+      <h1>Настройки оформления</h1>
+      <span class="mode-subtitle">Изменения сохраняются автоматически в браузере</span>
+    </div>
+
+    <div class="settings-tabs">
+      <label class="settings-tab active" data-tab="basic">Основные</label>
+      <label class="settings-tab" data-tab="advanced">Дополнительные</label>
+      <label class="settings-tab is-hidden" data-tab="custom">Кастомный CSS</label>
+    </div>
+
+    <div class="settings-content">
+      <div class="settings-pane active" id="settings-basic">
+        <div class="setting-row">
+          <label>Семейство шрифта</label>
+          <select id="set-font-family">
+            <option value="Inter, system-ui, sans-serif">Inter</option>
+            <option value="Roboto, sans-serif">Roboto</option>
+            <option value="Montserrat, sans-serif">Montserrat</option>
+            <option value="'Open Sans', sans-serif">Open Sans</option>
+            <option value="system-ui, sans-serif">System UI</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <label>Размер шрифта: <span class="setting-val" id="set-font-size-val">16</span>px</label>
+          <input type="range" id="set-font-size" min="12" max="24" value="16">
+        </div>
+        <div class="setting-row">
+          <label>Размер заголовков: <span class="setting-val" id="set-font-size-heading-val">26</span>px</label>
+          <input type="range" id="set-font-size-heading" min="16" max="44" value="26">
+        </div>
+        <div class="setting-row">
+          <label>Размер игр в списке: <span class="setting-val" id="set-font-size-game-val">14</span>px</label>
+          <input type="range" id="set-font-size-game" min="10" max="24" value="14">
+        </div>
+        <div class="setting-row">
+          <label>Текст боевого режима: <span class="setting-val" id="set-font-size-battle-val">64</span>px</label>
+          <input type="range" id="set-font-size-battle" min="24" max="120" value="64">
+        </div>
+        <div class="setting-row">
+          <label>Цвет фона</label>
+          <div class="setting-color-wrap">
+            <input type="color" id="set-bg-color" value="#0e0e10">
+            <span class="setting-hex" id="set-bg-color-hex">#0e0e10</span>
+          </div>
+        </div>
+        <div class="setting-row">
+          <label>Фоновое изображение</label>
+          <div class="setting-file">
+            <button class="btn btn-small" id="set-bg-image-btn">Выбрать файл</button>
+            <span class="setting-file-name" id="set-bg-image-name">Файл не выбран</span>
+            <button class="btn btn-small btn-icon" id="set-bg-image-clear" title="Удалить">&times;</button>
+          </div>
+          <input type="file" id="set-bg-image-input" accept="image/*" hidden>
+        </div>
+      </div>
+
+      <div class="settings-pane" id="settings-advanced">
+        <div class="setting-row">
+          <label>Цвет текста</label>
+          <div class="setting-color-wrap">
+            <input type="color" id="set-text-color" value="#efeff1">
+            <span class="setting-hex" id="set-text-color-hex">#efeff1</span>
+          </div>
+        </div>
+        <div class="setting-row">
+          <label>Акцентный цвет</label>
+          <div class="setting-color-wrap">
+            <input type="color" id="set-accent-color" value="#ff0000">
+            <span class="setting-hex" id="set-accent-color-hex">#ff0000</span>
+          </div>
+        </div>
+        <div class="setting-row">
+          <label>Затемнение фона: <span class="setting-val" id="set-bg-opacity-val">100</span>%</label>
+          <input type="range" id="set-bg-opacity" min="30" max="100" value="100">
+        </div>
+        <div class="setting-row">
+          <label>Скругление карточек: <span class="setting-val" id="set-radius-card-val">8</span>px</label>
+          <input type="range" id="set-radius-card" min="0" max="24" value="8">
+        </div>
+        <div class="setting-row">
+          <label>Скругление кнопок: <span class="setting-val" id="set-radius-element-val">6</span>px</label>
+          <input type="range" id="set-radius-element" min="0" max="24" value="6">
+        </div>
+      </div>
+
+      <div class="settings-pane is-hidden" id="settings-custom">
+        <p class="settings-note">Стили из этого блока переопределяют все настройки выше. Вставьте свой CSS-код.</p>
+        <textarea id="set-custom-css" spellcheck="false"></textarea>
+      </div>
+    </div>
+
+    <div class="settings-actions">
+      <button class="btn btn-primary" id="settings-save">
+        <i class="fas fa-check"></i> Сохранить
+      </button>
+      <button class="btn btn-secondary" id="settings-reset">
+        <i class="fas fa-undo"></i> Сбросить
+      </button>
+    </div>
+  </section>
+
+  <!-- ========== FAQ ========== -->
+  <section id="mode-faq" class="mode">
+    <div class="mode-header">
+      <h1>FAQ</h1>
+      <span class="mode-subtitle">Турнир: Арена Адаптации — инструмент для стримера</span>
+      <span class="mode-subtitle" style="font-size: 10px;">Инструкцию ИИшка писала если чо AHAH WW</span>
+    </div>
+
+    <div class="faq-content">
+      <div class="faq-section">
+        <h2>Что это?</h2>
+        <p>Веб-инструмент для проведения ивента "Турнир: Арена Адаптации".</p>
+      </div>
+
+      <div class="faq-section">
+        <h2>Режим подготовки</h2>
+        <p>Заполните имена участников и добавьте игры в каждую из трёх категорий. Названия категорий стримеров генерируются автоматически из имён. Нейтральные игры можно переименовать вручную.</p>
+        <p>Готовый список можно экспортировать в JSON-файл (кнопка "Экспорт JSON"). Этот файл потом загружается в боевом режиме. Ранее сохранённый список можно импортировать через "Импорт JSON" для редактирования.</p>
+      </div>
+
+      <div class="faq-section">
+        <h2>Боевой режим</h2>
+        <p>Загрузите JSON-файл, созданный в режиме подготовки, через drag'n'drop или кнопку выбора файла.</p>
+        <p>После загрузки нажимайте в любом месте экрана — игры будут открываться по одной с анимацией печатающегося текста. Порядок раскрытия: сначала нейтральные, потом игры стримеров.</p>
+        <p>Когда все игры раскрыты, откроется обзорный экран с тремя колонками. Клик по плашке с игрой делает её полупрозрачной (отмечает как сыгранную).</p>
+      </div>
+
+      <div class="faq-section">
+        <h2>Настройки оформления</h2>
+        <p>Во вкладке "Настройки" можно изменить внешний вид под своё оформление. Доступны три блока:</p>
+        <ul>
+          <li><strong>Основные</strong> — шрифт (семейство и размеры), цвет фона, фоновое изображение, размер заголовков и игр в списках, текст боевого режима.</li>
+          <li><strong>Дополнительные</strong> — цвет текста, акцентный цвет, затемнение фона, скругление углов.</li>
+          <!-- <li><strong>Кастомный CSS</strong> — для тонкой настройки стиля (скрыт, но доступен при необходимости).</li> -->
+        </ul>
+        <p>Изменения сохраняются в браузере и восстанавливаются при повторном открытии страницы.</p>
+      </div>
+
+      <div class="faq-section">
+        <h2>Как сохранить конфигурацию с играми?</h2>
+        <p>В режиме подготовки нажмите "Экспорт JSON" — браузер скачает файл <code>taa_config.json</code>. Храните его рядом. Для использования в новом стриме просто загрузите этот файл в боевом режиме.</p>
+      </div>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
