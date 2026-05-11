@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="styles.css?nocache=sosal2">
+  <link rel="stylesheet" href="styles.css?nocache=sosal3">
 </head>
 <body>
 
@@ -24,6 +24,7 @@
     </button>
     <button class="nav-btn" data-mode="faq" title="FAQ">
       <i class="fas fa-question"></i>
+      <span class="nav-badge" id="faq-badge"></span>
     </button>
   </nav>
 
@@ -126,6 +127,7 @@
       <label class="settings-tab active" data-tab="basic">Основные</label>
       <label class="settings-tab" data-tab="advanced">Дополнительные</label>
       <label class="settings-tab" data-tab="custom">Кастомный CSS</label>
+      <label class="settings-tab" data-tab="emotes">Эмоуты</label>
     </div>
 
     <div class="settings-content">
@@ -168,7 +170,7 @@
           </div>
         </div>
         <div class="setting-row">
-          <label>Фоновое изображение</label>
+          <label>Фоновое изображение (png, jpg, gif, wepb и прочее)</label>
           <div class="setting-file">
             <button class="btn btn-small" id="set-bg-image-btn">Выбрать файл</button>
             <span class="setting-file-name" id="set-bg-image-name">Файл не выбран</span>
@@ -218,6 +220,30 @@
         <p class="settings-note">Стили из этого блока переопределяют все настройки выше. Вставьте свой CSS-код.</p>
         <textarea id="set-custom-css" spellcheck="false"></textarea>
       </div>
+
+      <div class="settings-pane" id="settings-emotes">
+        <div class="setting-row">
+          <label>Название Twitch канала</label>
+          <input type="text" id="set-emote-channel" placeholder="например: boryacreative" spellcheck="false">
+        </div>
+        <div class="setting-row">
+          <label>Размер эмоутов: <span class="setting-val" id="set-emote-size-val">48</span>px</label>
+          <input type="range" id="set-emote-size" min="24" max="120" value="48">
+        </div>
+        <div class="setting-row">
+          <label>Время исчезновения: <span class="setting-val" id="set-emote-ttl-val">10</span>сек</label>
+          <input type="range" id="set-emote-ttl" min="3" max="30" value="10">
+        </div>
+        <div class="setting-row" style="flex-direction:row;gap:12px;margin-top:8px;">
+          <button class="btn btn-primary" id="emote-rain-start">
+            <i class="fas fa-play"></i> Запустить дождь
+          </button>
+          <button class="btn btn-secondary" id="emote-rain-stop">
+            <i class="fas fa-stop"></i> Остановить
+          </button>
+          <span id="emote-rain-status" style="font-size:0.85em;color:var(--text-muted);align-self:center;">Неактивен</span>
+        </div>
+      </div>
     </div>
 
     <div class="settings-actions">
@@ -239,43 +265,65 @@
     </div>
 
     <div class="faq-content">
-      <div class="faq-section">
-        <h2>Что это?</h2>
-        <p>Веб-инструмент для проведения ивента "Турнир: Арена Адаптации".</p>
+      <div class="faq-column">
+        <div class="faq-section">
+          <h2>Что это?</h2>
+          <p>Веб-инструмент для проведения ивента "Турнир: Арена Адаптации".</p>
+        </div>
+
+        <div class="faq-section">
+          <h2>Режим подготовки</h2>
+          <p>Заполните имена участников и добавьте игры в каждую из трёх категорий. Названия категорий стримеров генерируются автоматически из имён. Нейтральные игры можно переименовать вручную.</p>
+          <p>Готовый список можно экспортировать в JSON-файл (кнопка "Экспорт JSON"). Этот файл потом загружается в боевом режиме. Ранее сохранённый список можно импортировать через "Импорт JSON" для редактирования.</p>
+        </div>
+
+        <div class="faq-section">
+          <h2>Боевой режим</h2>
+          <p>Загрузите JSON-файл, созданный в режиме подготовки, через drag'n'drop или кнопку выбора файла.</p>
+          <p>После загрузки нажимайте в любом месте экрана — игры будут открываться по одной с анимацией печатающегося текста. Порядок раскрытия: сначала нейтральные, потом игры стримеров.</p>
+          <p>Когда все игры раскрыты, откроется обзорный экран с тремя колонками. У каждой игры есть две кнопки по краям: красная — победа первого стримера, синяя — победа второго. Клик по кнопке отмечает победителя, повторный клик снимает отметку.</p>
+          <p>Снизу отображается счёт с количеством выигранных игр у каждого участника.</p>
+        </div>
+
+        <div class="faq-section">
+          <h2>Настройки оформления</h2>
+          <p>Во вкладке "Настройки" можно изменить внешний вид под своё оформление. Доступны три блока:</p>
+          <ul>
+            <li><strong>Основные</strong> — шрифт (семейство и размеры), цвет фона, фоновое изображение, размер заголовков и игр в списках, текст боевого режима.</li>
+            <li><strong>Дополнительные</strong> — цвет текста, акцентный цвет, затемнение фона, скругление углов.</li>
+            <!-- <li><strong>Кастомный CSS</strong> — для тонкой настройки стиля (скрыт, но доступен при необходимости).</li> -->
+          </ul>
+          <p>Изменения сохраняются в браузере и восстанавливаются при повторном открытии страницы.</p>
+        </div>
+
+        <div class="faq-section">
+          <h2>Как сохранить конфигурацию с играми?</h2>
+          <p>В режиме подготовки нажмите "Экспорт JSON" — браузер скачает файл <code>taa_config.json</code>. Храните его рядом. Для использования в новом стриме просто загрузите этот файл в боевом режиме.</p>
+        </div>
       </div>
 
-      <div class="faq-section">
-        <h2>Режим подготовки</h2>
-        <p>Заполните имена участников и добавьте игры в каждую из трёх категорий. Названия категорий стримеров генерируются автоматически из имён. Нейтральные игры можно переименовать вручную.</p>
-        <p>Готовый список можно экспортировать в JSON-файл (кнопка "Экспорт JSON"). Этот файл потом загружается в боевом режиме. Ранее сохранённый список можно импортировать через "Импорт JSON" для редактирования.</p>
+      <div class="faq-column">
+        <div class="faq-section">
+          <h2>История изменений</h2>
+          <div class="changelog" id="changelog">
+            <div class="changelog-entry" data-id="2026-05-12">
+              <span class="changelog-date">12.05.2026</span>
+              <ul>
+                <li>Выбор победителя на карточках игр (кнопки по краям)</li>
+                <li>Счётчик побед в боевом режиме</li>
+                <li>Настройка цвета оппонента и размера шрифта счёта</li>
+                <li>Красный бейдж новых изменений на кнопке FAQ</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
-
-      <div class="faq-section">
-        <h2>Боевой режим</h2>
-        <p>Загрузите JSON-файл, созданный в режиме подготовки, через drag'n'drop или кнопку выбора файла.</p>
-        <p>После загрузки нажимайте в любом месте экрана — игры будут открываться по одной с анимацией печатающегося текста. Порядок раскрытия: сначала нейтральные, потом игры стримеров.</p>
-        <p>Когда все игры раскрыты, откроется обзорный экран с тремя колонками. У каждой игры есть две кнопки по краям: красная — победа первого стримера, синяя — победа второго. Клик по кнопке отмечает победителя, повторный клик снимает отметку.</p>
-        <p>Снизу отображается счёт с количеством выигранных игр у каждого участника.</p>
-      </div>
-
-      <div class="faq-section">
-        <h2>Настройки оформления</h2>
-        <p>Во вкладке "Настройки" можно изменить внешний вид под своё оформление. Доступны три блока:</p>
-        <ul>
-          <li><strong>Основные</strong> — шрифт (семейство и размеры), цвет фона, фоновое изображение, размер заголовков и игр в списках, текст боевого режима.</li>
-          <li><strong>Дополнительные</strong> — цвет текста, акцентный цвет, затемнение фона, скругление углов.</li>
-          <li><strong>Кастомный CSS</strong> — для тонкой настройки стиля (скрыт, но доступен при необходимости).</li>
-        </ul>
-        <p>Изменения сохраняются в браузере и восстанавливаются при повторном открытии страницы.</p>
-      </div>
-
-      <div class="faq-section">
-        <h2>Как сохранить конфигурацию с играми?</h2>
-        <p>В режиме подготовки нажмите "Экспорт JSON" — браузер скачает файл <code>taa_config.json</code>. Храните его рядом. Для использования в новом стриме просто загрузите этот файл в боевом режиме.</p>
-      </div>
+    </div>      
     </div>
   </section>
 
+  <div id="emote-rain-container"></div>
   <script src="app.js?nocache=sosal2"></script>
+  <script src="7tv.js?nocache=sosal1"></script>
 </body>
 </html>

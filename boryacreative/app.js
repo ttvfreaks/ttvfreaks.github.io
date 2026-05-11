@@ -33,6 +33,9 @@ const DEFAULT_SETTINGS = {
   radiusCard: 8,
   radiusElement: 6,
   customCSS: '/* Ваши кастомные стили */\nbody {\n  background: linear-gradient(135deg, #0e0e10, #1a0808);\n}',
+  emoteChannel: '',
+  emoteSize: 48,
+  emoteTTL: 10,
 };
 
 const NICKNAME_PLACEHOLDERS = [
@@ -128,6 +131,11 @@ function populateSettingsUI() {
   document.getElementById('set-radius-element').value = settings.radiusElement;
   document.getElementById('set-radius-element-val').textContent = settings.radiusElement;
   document.getElementById('set-custom-css').value = settings.customCSS;
+  document.getElementById('set-emote-channel').value = settings.emoteChannel || '';
+  document.getElementById('set-emote-size').value = settings.emoteSize;
+  document.getElementById('set-emote-size-val').textContent = settings.emoteSize;
+  document.getElementById('set-emote-ttl').value = settings.emoteTTL;
+  document.getElementById('set-emote-ttl-val').textContent = settings.emoteTTL;
 
   if (settings.bgImage) {
     document.getElementById('set-bg-image-name').textContent = 'Изображение загружено';
@@ -153,6 +161,9 @@ function gatherSettingsFromUI() {
     radiusCard: parseInt(document.getElementById('set-radius-card').value),
     radiusElement: parseInt(document.getElementById('set-radius-element').value),
     customCSS: document.getElementById('set-custom-css').value,
+    emoteChannel: document.getElementById('set-emote-channel').value,
+    emoteSize: parseInt(document.getElementById('set-emote-size').value),
+    emoteTTL: parseInt(document.getElementById('set-emote-ttl').value),
   };
 }
 
@@ -236,10 +247,41 @@ function setupSettings() {
     settings = gatherSettingsFromUI();
     applySettings();
     saveSettings();
+    if (window.emoteRain) window.emoteRain.updateSettings();
     const btn = this;
     const orig = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-check"></i> Сохранено!';
     setTimeout(() => { btn.innerHTML = orig; }, 1500);
+  });
+
+  // Emote range live values
+  document.getElementById('set-emote-size').addEventListener('input', function () {
+    document.getElementById('set-emote-size-val').textContent = this.value;
+  });
+  document.getElementById('set-emote-ttl').addEventListener('input', function () {
+    document.getElementById('set-emote-ttl-val').textContent = this.value;
+  });
+
+  // Emote rain start/stop
+  document.getElementById('emote-rain-start').addEventListener('click', function () {
+    const channel = document.getElementById('set-emote-channel').value.trim();
+    if (!channel) { alert('Введите название Twitch канала'); return; }
+    settings.emoteChannel = channel;
+    settings.emoteSize = parseInt(document.getElementById('set-emote-size').value);
+    settings.emoteTTL = parseInt(document.getElementById('set-emote-ttl').value);
+    saveSettings();
+    if (window.emoteRain) {
+      window.emoteRain.start(channel);
+      document.getElementById('emote-rain-status').textContent = 'Активен';
+      document.getElementById('emote-rain-status').style.color = 'var(--accent)';
+    }
+  });
+  document.getElementById('emote-rain-stop').addEventListener('click', function () {
+    if (window.emoteRain) {
+      window.emoteRain.stop();
+      document.getElementById('emote-rain-status').textContent = 'Остановлен';
+      document.getElementById('emote-rain-status').style.color = 'var(--text-muted)';
+    }
   });
 
   // Reset
@@ -271,6 +313,7 @@ function switchMode(mode) {
 
   if (mode === 'prep') syncPrepUI();
   if (mode === 'battle') updateBattlePhase();
+  if (mode === 'faq') markChangelogSeen();
 }
 
 function updateBattlePhase() {
@@ -777,6 +820,25 @@ function stopTypewriter() {
   }
 }
 
+// ===== CHANGELOG BADGE =====
+function checkChangelogBadge() {
+  const entries = document.querySelectorAll('.changelog-entry');
+  if (!entries.length) return;
+  const latestId = entries[0].dataset.id;
+  const seen = localStorage.getItem('taa-changelog-seen');
+  if (seen !== latestId) {
+    document.getElementById('faq-badge').classList.add('show');
+  }
+}
+
+function markChangelogSeen() {
+  const entries = document.querySelectorAll('.changelog-entry');
+  if (!entries.length) return;
+  const latestId = entries[0].dataset.id;
+  localStorage.setItem('taa-changelog-seen', latestId);
+  document.getElementById('faq-badge').classList.remove('show');
+}
+
 // ===== HELPERS =====
 function escapeHtml(str) {
   const div = document.createElement('div');
@@ -794,6 +856,7 @@ document.addEventListener('DOMContentLoaded', function () {
   setupSettings();
   setupBattle();
   setupModeSwitch();
+  checkChangelogBadge();
 
   syncPrepUI();
 });

@@ -91,6 +91,7 @@ body::before {
 }
 
 .nav-btn {
+  position: relative;
   width: 42px;
   height: 42px;
   border: none;
@@ -105,6 +106,28 @@ body::before {
   transition: all 0.2s ease;
   opacity: 0.5;
   backdrop-filter: blur(4px);
+}
+
+.nav-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: none;
+  box-shadow: 0 0 4px rgba(255, 0, 0, 0.5);
+}
+
+.nav-badge.show {
+  display: block;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
 }
 
 .nav-btn:hover {
@@ -140,6 +163,7 @@ body::before {
   font-size: var(--font-size-heading);
   font-weight: 700;
   letter-spacing: -0.3px;
+  text-shadow: 0 0 2px var(--text-primary);
 }
 
 .mode-subtitle {
@@ -486,6 +510,13 @@ textarea {
   color: var(--color-opponent);
 }
 
+#score-s-name, #score-s-num.score-num{
+  text-shadow: 0 0 2px var(--accent);
+}
+#score-o-name, #score-o-num.score-num{
+  text-shadow: 0 0 2px var(--color-opponent);
+}
+
 .score-num {
   margin-left: 40px;
   font-weight: 800;
@@ -689,13 +720,16 @@ textarea {
 }
 
 .first-streamer{
-  color: var(--accent)
+  color: var(--accent);
+  text-shadow: 0 0 3px var(--accent);
 }
 .neutral-games{
-  color: var(--text-primary)
+  color: var(--text-primary);
+  text-shadow: 0 0 3px var(--text-primary);
 }
 .second-streamer{
-  color: var(--color-opponent)
+  color: var(--color-opponent);
+  text-shadow: 0 0 3px var(--color-opponent);
 }
 
 .overview-games {
@@ -914,17 +948,51 @@ textarea {
 }
 
 .faq-content {
-  max-width: 680px;
+  /* max-width: 960px; */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+  flex: 1;
+  min-height: 0;
+}
+
+.faq-column {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
+  padding-bottom: 20px;
+}
+
+.faq-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 18px 22px;
+  transition: border-color 0.2s;
+}
+
+.faq-section:hover {
+  border-color: var(--text-muted);
 }
 
 .faq-section h2 {
-  font-size: calc(var(--font-size-heading) * 0.65);
+  font-size: calc(var(--font-size-heading) * 0.6);
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.faq-section h2::before {
+  content: '';
+  width: 4px;
+  height: 20px;
+  border-radius: 2px;
+  background: var(--accent);
+  flex-shrink: 0;
 }
 
 .faq-section p {
@@ -957,6 +1025,7 @@ textarea {
   height: 5px;
   border-radius: 50%;
   background: var(--accent);
+  opacity: 0.6;
 }
 
 .faq-section strong {
@@ -969,6 +1038,83 @@ textarea {
   border-radius: var(--radius-element);
   font-size: 0.9em;
   color: var(--text-primary);
+}
+
+.changelog {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.changelog-entry {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 14px 18px;
+  border-left: 3px solid var(--accent);
+  transition: border-color 0.2s;
+}
+
+.changelog-entry:hover {
+  border-color: var(--text-muted);
+  border-left-color: var(--accent);
+}
+
+.changelog-date {
+  display: block;
+  font-size: 0.7em;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+  opacity: 0.8;
+}
+
+.changelog-entry ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.changelog-entry li {
+  font-size: var(--font-size);
+  line-height: 1.6;
+  color: var(--text-secondary);
+  padding: 3px 0 3px 16px;
+  position: relative;
+}
+
+.changelog-entry li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 10px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+/* ===== EMOTE RAIN ===== */
+#emote-rain-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.emote-rain-particle {
+  position: absolute;
+  user-select: none;
+  pointer-events: none;
+  image-rendering: auto;
+  will-change: transform, opacity;
+  border-radius: 4px;
 }
 
 /* ===== ANIMATIONS ===== */
@@ -1002,6 +1148,9 @@ textarea {
   }
   .reveal-name {
     font-size: calc(var(--font-size-battle) * 0.5);
+  }
+  .faq-content {
+    grid-template-columns: 1fr;
   }
 }
 
