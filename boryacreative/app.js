@@ -42,7 +42,8 @@ const DEFAULT_SETTINGS = {
 };
 
 const NICKNAME_PLACEHOLDERS = [
-  "BORYACREATIVE", "Lekheeey", "OdinPrimeOfficial", "MEGAZHIZHA", "HELP ахаха а почему L перевёрнута"
+  "BORYACREATIVE", "Lekheeey", "OdinPrimeOfficial", "MEGAZHIZHA", "HELP ахаха а почему L перевёрнута",
+  "AHAH WW", "469"
 ]
 
 let settings = {};
@@ -587,6 +588,7 @@ function syncPrepUI() {
   document.getElementById('prep-opponent').value = state.prep.opponent;
   document.getElementById('prep-streamer').placeholder = "Например: " + NICKNAME_PLACEHOLDERS[Math.floor(Math.random() * NICKNAME_PLACEHOLDERS.length)];
   document.getElementById('prep-opponent').placeholder = "Например: " + NICKNAME_PLACEHOLDERS[Math.floor(Math.random() * NICKNAME_PLACEHOLDERS.length)];
+  document.getElementById('set-emote-channel').placeholder = "Например: " + NICKNAME_PLACEHOLDERS[Math.floor(Math.random() * NICKNAME_PLACEHOLDERS.length)];
   const neutralTitle = document.querySelector('.prep-cat-title');
   if (neutralTitle) neutralTitle.value = state.prep.categories[0];
   updateCategoryTitles();
