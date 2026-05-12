@@ -35,8 +35,10 @@ const DEFAULT_SETTINGS = {
   customCSS: '/* Ваши кастомные стили */\nbody {\n  background: linear-gradient(135deg, #0e0e10, #1a0808);\n}',
   emoteChannel: '',
   emoteSize: 48,
-  emoteTTL: 10,
-  emote7tvProxy: '',
+  emoteTTLMin: 5,
+  emoteTTLMax: 10,
+  bounceStrength: 0.7,
+  collisionStrength: 0.6,
 };
 
 const NICKNAME_PLACEHOLDERS = [
@@ -133,11 +135,17 @@ function populateSettingsUI() {
   document.getElementById('set-radius-element-val').textContent = settings.radiusElement;
   document.getElementById('set-custom-css').value = settings.customCSS;
   document.getElementById('set-emote-channel').value = settings.emoteChannel || '';
-  document.getElementById('set-7tv-proxy').value = settings.emote7tvProxy || '';
   document.getElementById('set-emote-size').value = settings.emoteSize;
   document.getElementById('set-emote-size-val').textContent = settings.emoteSize;
-  document.getElementById('set-emote-ttl').value = settings.emoteTTL;
-  document.getElementById('set-emote-ttl-val').textContent = settings.emoteTTL;
+  document.getElementById('set-emote-ttl-min').value = settings.emoteTTLMin;
+  document.getElementById('set-emote-ttl-min-val').textContent = settings.emoteTTLMin;
+  document.getElementById('set-emote-ttl-max').value = settings.emoteTTLMax;
+  document.getElementById('set-emote-ttl-max-val').textContent = settings.emoteTTLMax;
+  document.getElementById('set-bounce-strength').value = Math.round(settings.bounceStrength * 10);
+  document.getElementById('set-bounce-strength-val').textContent = settings.bounceStrength;
+  document.getElementById('set-collision-strength').value = Math.round(settings.collisionStrength * 10);
+  document.getElementById('set-collision-strength-val').textContent = settings.collisionStrength;
+  updateDualTTLFIll();
 
   if (settings.bgImage) {
     document.getElementById('set-bg-image-name').textContent = 'Изображение загружено';
@@ -165,8 +173,10 @@ function gatherSettingsFromUI() {
     customCSS: document.getElementById('set-custom-css').value,
     emoteChannel: document.getElementById('set-emote-channel').value,
     emoteSize: parseInt(document.getElementById('set-emote-size').value),
-    emoteTTL: parseInt(document.getElementById('set-emote-ttl').value),
-    emote7tvProxy: document.getElementById('set-7tv-proxy').value,
+    emoteTTLMin: parseInt(document.getElementById('set-emote-ttl-min').value),
+    emoteTTLMax: Math.max(parseInt(document.getElementById('set-emote-ttl-min').value), parseInt(document.getElementById('set-emote-ttl-max').value)),
+    bounceStrength: parseInt(document.getElementById('set-bounce-strength').value) / 10,
+    collisionStrength: parseInt(document.getElementById('set-collision-strength').value) / 10,
   };
 }
 
@@ -261,14 +271,64 @@ function setupSettings() {
   document.getElementById('set-emote-size').addEventListener('input', function () {
     document.getElementById('set-emote-size-val').textContent = this.value;
   });
-  document.getElementById('set-emote-ttl').addEventListener('input', function () {
-    document.getElementById('set-emote-ttl-val').textContent = this.value;
+  document.getElementById('set-emote-ttl-min').addEventListener('input', function () {
+    var max = document.getElementById('set-emote-ttl-max');
+    if (parseInt(this.value) > parseInt(max.value)) {
+      max.value = this.value;
+      document.getElementById('set-emote-ttl-max-val').textContent = this.value;
+    }
+    document.getElementById('set-emote-ttl-min-val').textContent = this.value;
+    updateDualTTLFIll();
+  });
+  document.getElementById('set-emote-ttl-max').addEventListener('input', function () {
+    var min = document.getElementById('set-emote-ttl-min');
+    if (parseInt(this.value) < parseInt(min.value)) {
+      this.value = min.value;
+    }
+    document.getElementById('set-emote-ttl-max-val').textContent = this.value;
+    updateDualTTLFIll();
+  });
+  document.getElementById('set-bounce-strength').addEventListener('input', function () {
+    document.getElementById('set-bounce-strength-val').textContent = (parseInt(this.value) / 10).toFixed(1);
+  });
+  document.getElementById('set-collision-strength').addEventListener('input', function () {
+    document.getElementById('set-collision-strength-val').textContent = (parseInt(this.value) / 10).toFixed(1);
   });
 
-  // Emote rain start/stop
-  document.getElementById('emote-rain-start').addEventListener('click', function () {
-    const channel = document.getElementById('set-emote-channel').value.trim();
-    if (!channel) { alert('Введите название Twitch канала'); return; }
+  function updateEmoteNavIcon() {
+    var toggle = document.getElementById('nav-emote-toggle');
+    if (!toggle) return;
+    if (window.emoteRain && window.emoteRain.isRunning()) {
+      toggle.classList.add('active');
+    } else {
+      toggle.classList.remove('active');
+    }
+  }
+
+  function showEmoteToast(msg, type) {
+    var toast = document.getElementById('emote-toast');
+    if (!toast) return;
+    var label = '';
+    if (type === 'success') label = 'УСПЕХ';
+    else if (type === 'warning') label = 'ВНИМАНИЕ';
+    else label = 'ОШИБКА';
+    toast.className = 'emote-toast show ' + (type || 'error');
+    toast.innerHTML = '<span class="toast-label">' + label + '</span><span class="toast-msg">' + escapeHtml(msg) + '</span>';
+    clearTimeout(toast._hide);
+    toast._hide = setTimeout(function () { toast.classList.remove('show'); }, 4000);
+  }
+
+  function startEmoteRain(notifyError) {
+    var channel = document.getElementById('set-emote-channel').value.trim();
+    if (!channel) {
+      switchMode('settings');
+      document.querySelectorAll('.settings-tab').forEach(function (t) { t.classList.remove('active'); });
+      document.querySelectorAll('.settings-pane').forEach(function (p) { p.classList.remove('active'); });
+      document.querySelector('.settings-tab[data-tab="emotes"]').classList.add('active');
+      document.getElementById('settings-emotes').classList.add('active');
+      showEmoteToast('Настройте свой канал, чтобы включить дождь из эмоутов', 'warning');
+      return;
+    }
     settings = gatherSettingsFromUI();
     applySettings();
     saveSettings();
@@ -277,14 +337,39 @@ function setupSettings() {
       window.emoteRain.start(channel);
       document.getElementById('emote-rain-status').textContent = 'Активен';
       document.getElementById('emote-rain-status').style.color = 'var(--accent)';
+      updateEmoteNavIcon();
     }
+  }
+
+  // Emote rain start/stop
+  document.getElementById('emote-rain-start').addEventListener('click', function () {
+    startEmoteRain();
   });
   document.getElementById('emote-rain-stop').addEventListener('click', function () {
     if (window.emoteRain) {
       window.emoteRain.stop();
       document.getElementById('emote-rain-status').textContent = 'Остановлен';
       document.getElementById('emote-rain-status').style.color = 'var(--text-muted)';
+      updateEmoteNavIcon();
     }
+  });
+  document.getElementById('nav-emote-toggle').addEventListener('click', function () {
+    if (window.emoteRain && window.emoteRain.isRunning()) {
+      window.emoteRain.stop();
+      document.getElementById('emote-rain-status').textContent = 'Остановлен';
+      document.getElementById('emote-rain-status').style.color = 'var(--text-muted)';
+      updateEmoteNavIcon();
+    } else {
+      startEmoteRain();
+    }
+  });
+
+  window.addEventListener('emote-rain-error', function (e) {
+    showEmoteToast('' + (e.detail || 'неизвестная ошибка'), 'error');
+  });
+
+  window.addEventListener('emote-rain-status', function (e) {
+    showEmoteToast('' + (e.detail || ''), 'success');
   });
 
   // Reset
@@ -847,6 +932,18 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+function updateDualTTLFIll() {
+  var min = document.getElementById('set-emote-ttl-min');
+  var max = document.getElementById('set-emote-ttl-max');
+  if (!min || !max) return;
+  var fill = document.getElementById('dual-ttl-fill');
+  if (!fill) return;
+  var pMin = ((parseInt(min.value) - parseInt(min.min)) / (parseInt(min.max) - parseInt(min.min))) * 100;
+  var pMax = ((parseInt(max.value) - parseInt(max.min)) / (parseInt(max.max) - parseInt(max.min))) * 100;
+  fill.style.left = pMin + '%';
+  fill.style.width = (pMax - pMin) + '%';
 }
 
 // ===== INIT =====

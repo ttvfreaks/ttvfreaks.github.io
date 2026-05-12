@@ -9,23 +9,34 @@
     particles: [],
     emotes7tv: new Map(),
     emoteSize: 48,
-    emoteTTL: 10000,
+    emoteTTLMin: 5000,
+    emoteTTLMax: 10000,
+    bounceStrength: 0.7,
+    collisionStrength: 0.6,
     container: null,
     reconnectTimer: null,
-    proxyUrl: '',
-    msgCount: 0,
+    twitchId: null,
+    engine: null,
+    wallBodies: [],
   };
 
   var CONFIG = {
     IRC_URL: 'wss://irc-ws.chat.twitch.tv:443',
-    GRAVITY: 0.3,
-    WALL_BOUNCE: 0.5,
-    GROUND_BOUNCE: 0.25,
-    FRICTION: 0.985,
-    COLLISION_PUSH: 0.4,
     MAX_EMOTES_PER_MSG: 8,
     RECONNECT_DELAY: 5000,
+    GRAVITY_SCALE: 0.0035,
+    RESTITUTION_BASE: 0.4,
+    FRICTION: 0.5,
+    FRICTION_STATIC: 0.8,
+    FRICTION_AIR: 0.006,
+    DENSITY_BASE: 0.001,
+    WALL_RESTITUTION: 0.4,
+    WALL_FRICTION: 0.6,
   };
+
+  function dispatchStatus(msg) {
+    window.dispatchEvent(new CustomEvent('emote-rain-status', { detail: msg }));
+  }
 
   function readSettings() {
     try {
@@ -33,58 +44,76 @@
       if (saved) {
         var s = JSON.parse(saved);
         state.emoteSize = s.emoteSize || 48;
-        state.emoteTTL = (s.emoteTTL || 10) * 1000;
-        state.proxyUrl = s.emote7tvProxy || '';
-        console.log('[EmoteRain] settings loaded: size=' + state.emoteSize + ' ttl=' + state.emoteTTL + ' proxy=' + (state.proxyUrl || 'none'));
+        state.emoteTTLMin = (s.emoteTTLMin || 5) * 1000;
+        state.emoteTTLMax = (s.emoteTTLMax || 10) * 1000;
+        state.bounceStrength = s.bounceStrength || 0.7;
+        state.collisionStrength = s.collisionStrength || 0.6;
+        if (state.emoteTTLMax < state.emoteTTLMin) state.emoteTTLMax = state.emoteTTLMin;
+        console.log('[EmoteRain] settings loaded');
       }
     } catch (e) {}
   }
 
+  /* ===== MATTER.JS PHYSICS ===== */
+  function initPhysics() {
+    if (state.engine) return;
+    if (!window.Matter) {
+      console.warn('[EmoteRain] Matter.js not loaded');
+      return;
+    }
+    var M = window.Matter;
+    state.engine = M.Engine.create({
+      gravity: { x: 0, y: 1, scale: CONFIG.GRAVITY_SCALE },
+      enableSleeping: true,
+    });
+    buildWalls();
+  }
+
+  function buildWalls() {
+    if (!state.engine || !window.Matter) return;
+    var M = window.Matter;
+    state.wallBodies.forEach(function (b) { M.Composite.remove(state.engine.world, b); });
+    state.wallBodies = [];
+
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    var thick = 60;
+    var opts = {
+      isStatic: true,
+      restitution: CONFIG.WALL_RESTITUTION,
+      friction: CONFIG.WALL_FRICTION,
+    };
+
+    var floor = M.Bodies.rectangle(w / 2, h + thick / 2, w + thick * 2, thick, opts);
+    var left = M.Bodies.rectangle(-thick / 2, h / 2, thick, h * 2, opts);
+    var right = M.Bodies.rectangle(w + thick / 2, h / 2, thick, h * 2, opts);
+
+    state.wallBodies = [floor, left, right];
+    M.Composite.add(state.engine.world, state.wallBodies);
+  }
+
   /* ===== 7TV EMOTES ===== */
+  var CDN_PROXY = 'https://cdn.rte.net.ru/';
+
   function load7TVEmotes(data) {
     var emoteSet = data.emote_set || data;
     var emotes = (emoteSet.emotes || []);
     state.emotes7tv.clear();
     emotes.forEach(function (em) {
-      var hostUrl = em.data && em.data.host && em.data.host.url;
-      if (hostUrl) {
-        state.emotes7tv.set(em.name, 'https:' + hostUrl + '/' + em.id + '/4x.webp');
+      if (em.id && em.data && em.data.host) {
+        state.emotes7tv.set(em.name, CDN_PROXY + 'https://cdn.7tv.app/emote/' + em.id + '/4x.webp');
       }
     });
+    dispatchStatus('7TV эмоутов загружено: ' + state.emotes7tv.size);
     console.log('[EmoteRain] 7TV loaded ' + state.emotes7tv.size + ' emotes');
   }
 
-  function fetch7TVEmotes(channel) {
-    // 1) Прямой GraphQL к 7tv.io (как расширение 7TV)
-    console.log('[EmoteRain] fetching 7TV emotes via 7tv.io/gql...');
-    return fetch7TVEmotesDirect(channel)
-      .then(function (ok) {
-        if (!ok) {
-          // 2) Fallback — локальный файл
-          console.log('[EmoteRain] direct failed, trying local file...');
-          return fetch('7tv-emotes.json').then(function (r) {
-            if (!r.ok) throw new Error('no local file');
-            return r.json();
-          }).then(function (data) {
-            console.log('[EmoteRain] loaded 7tv-emotes.json (' + Object.keys(data).length + ' emotes)');
-            state.emotes7tv.clear();
-            Object.keys(data).forEach(function (name) {
-              state.emotes7tv.set(name, data[name]);
-            });
-          }).catch(function () {
-            // 3) Последний шанс — прокси
-            console.log('[EmoteRain] local file not found, trying proxy...');
-            return fetch7TVEmotesViaProxy(channel);
-          });
-        }
-      });
-  }
-
-  function fetch7TVEmotesDirect(channel) {
+  function fetch7TVEmotes(twitchId) {
+    dispatchStatus('Загрузка 7TV эмоутов...');
     var body = JSON.stringify({
       operationName: 'GetUserByConnection',
-      variables: { platform: 'TWITCH', username: channel },
-      query: 'query GetUserByConnection($platform: ConnectionPlatform!, $username: String) { user: userByConnection(platform: $platform, username: $username) { id emote_set { emotes { id name data { host { url } } } } } }',
+      variables: { platform: 'TWITCH', id: twitchId },
+      query: 'query GetUserByConnection($platform: ConnectionPlatform!, $id: String!) { user: userByConnection(platform: $platform, id: $id) { id emote_sets { id emotes { id name data { host { url } } } } } }',
     });
 
     return fetch('https://7tv.io/v3/gql', {
@@ -95,47 +124,23 @@
       .then(function (res) {
         console.log('[EmoteRain] 7tv.io/gql response status:', res.status);
         if (!res.ok) {
-          return res.text().then(function (t) { throw new Error('HTTP ' + res.status + ': ' + t.slice(0, 100)); });
+          return res.text().then(function (t) { throw new Error('HTTP ' + res.status); });
         }
         return res.json();
       })
       .then(function (json) {
         var user = json.data && json.data.user;
-        if (!user) throw new Error('no user in response');
-        var emotes = (user.emote_set && user.emote_set.emotes) || [];
-        console.log('[EmoteRain] 7tv.io/gql emotes:', emotes.length);
-        load7TVEmotes({ emote_set: { emotes: emotes } });
-        return true;
+        if (!user) throw new Error('no user in response: ' + JSON.stringify(json.errors || json));
+        var allEmotes = [];
+        (user.emote_sets || []).forEach(function (set) {
+          (set.emotes || []).forEach(function (em) { allEmotes.push(em); });
+        });
+        console.log('[EmoteRain] 7tv.io/gql loaded ' + allEmotes.length + ' emotes from ' + (user.emote_sets || []).length + ' sets');
+        load7TVEmotes({ emote_set: { emotes: allEmotes } });
       })
       .catch(function (e) {
         console.warn('[EmoteRain] 7tv.io/gql failed: ' + e.message);
-        return false;
-      });
-  }
-
-  function fetch7TVEmotesViaProxy(channel) {
-    var apiUrl = 'https://api.7tv.io/v3/users/twitch/' + encodeURIComponent(channel);
-    var url = state.proxyUrl
-      ? state.proxyUrl + '?url=' + encodeURIComponent(apiUrl)
-      : apiUrl;
-
-    console.log('[EmoteRain] fetching 7TV via proxy:', url);
-
-    return fetch(url)
-      .then(function (res) {
-        console.log('[EmoteRain] proxy response status:', res.status);
-        if (!res.ok) {
-          return res.text().then(function (body) {
-            throw new Error('proxy error ' + res.status + ': ' + body.slice(0, 200));
-          });
-        }
-        return res.json();
-      })
-      .then(function (data) {
-        load7TVEmotes(data);
-      })
-      .catch(function (e) {
-        console.warn('[EmoteRain] proxy fetch failed: ' + e.message);
+        window.dispatchEvent(new CustomEvent('emote-rain-error', { detail: 'Ошибка 7TV: ' + e.message }));
       });
   }
 
@@ -147,8 +152,11 @@
     state.ws = ws;
     var nick = 'justinfan' + Math.floor(Math.random() * 99999);
 
+    dispatchStatus('Подключение к чату Twitch...');
+
     ws.onopen = function () {
       console.log('[EmoteRain] IRC connected, joining #' + state.channel);
+      dispatchStatus('Подключено к Twitch, вход в чат #' + state.channel);
       ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
       ws.send('NICK ' + nick);
       ws.send('JOIN #' + state.channel);
@@ -164,6 +172,15 @@
           ws.send('PONG ' + (payload ? ':' + payload[1] : ':tmi.twitch.tv'));
           continue;
         }
+        if (line.indexOf('ROOMSTATE') !== -1) {
+          var roomMatch = line.match(/room-id=(\d+)/);
+          if (roomMatch && !state.twitchId) {
+            state.twitchId = roomMatch[1];
+            console.log('[EmoteRain] got twitch room-id:', state.twitchId);
+            dispatchStatus('Получен ID канала, загрузка 7TV эмоутов...');
+            fetch7TVEmotes(state.twitchId);
+          }
+        }
         if (line.indexOf('PRIVMSG') !== -1) {
           handleIRCMessage(line);
         }
@@ -174,6 +191,7 @@
       console.log('[EmoteRain] IRC disconnected');
       state.ws = null;
       if (state.running) {
+        dispatchStatus('Потеряно соединение с Twitch, переподключение...');
         console.log('[EmoteRain] IRC reconnecting in ' + CONFIG.RECONNECT_DELAY + 'ms');
         state.reconnectTimer = setTimeout(function () { connectIRC(); }, CONFIG.RECONNECT_DELAY);
       }
@@ -181,6 +199,7 @@
 
     ws.onerror = function (e) {
       console.warn('[EmoteRain] IRC error:', e);
+      window.dispatchEvent(new CustomEvent('emote-rain-error', { detail: 'Ошибка подключения к Twitch IRC' }));
     };
   }
 
@@ -206,7 +225,6 @@
       if (emotesStr && emotesStr !== '/') {
         var entries = emotesStr.split('/');
         var spawned = 0;
-        console.log('[EmoteRain] IRC msg with emotes:', message.replace(/\u200B/g, '').trim());
         for (var e = 0; e < entries.length && spawned < CONFIG.MAX_EMOTES_PER_MSG; e++) {
           var parts = entries[e].split(':');
           if (parts.length < 2) continue;
@@ -216,7 +234,6 @@
             var pos = ranges[r].split('-').map(Number);
             var name = message.slice(pos[0], pos[1] + 1);
             if (name) {
-              console.log('[EmoteRain] detected twitch emote:', name, '(id=' + emoteId + ')');
               spawnEmote(name, 'https://static-cdn.jtvnw.net/emoticons/v2/' + emoteId + '/default/dark/3.0');
               spawned++;
             }
@@ -229,122 +246,135 @@
     for (var w = 0; w < words.length; w++) {
       var url = state.emotes7tv.get(words[w]);
       if (url) {
-        console.log('[EmoteRain] detected 7tv emote:', words[w]);
         spawnEmote(words[w], url);
       }
     }
   }
 
-  /* ===== EMOTE RAIN ===== */
+  /* ===== EMOTE SPAWN ===== */
   var spawnCount = 0;
 
   function spawnEmote(name, url) {
-    if (!state.running) return;
-
+    if (!state.running || !state.engine || !window.Matter) return;
     spawnCount++;
-    console.log('[EmoteRain] spawn #' + spawnCount + ': ' + name);
-
-    var size = state.emoteSize;
-    var margin = size;
-    var x = margin + Math.random() * (window.innerWidth - margin * 2);
 
     var img = document.createElement('img');
     img.className = 'emote-rain-particle';
-    img.src = url;
     img.alt = name;
     img.draggable = false;
-    img.style.width = size + 'px';
-    img.style.height = size + 'px';
 
-    state.container.appendChild(img);
+    var ttl = state.emoteTTLMin + Math.random() * (state.emoteTTLMax - state.emoteTTLMin);
 
-    state.particles.push({
-      x: x,
-      y: -size,
-      vx: (Math.random() - 0.5) * 3,
-      vy: Math.random() * 2,
-      size: size,
+    var particle = {
       el: img,
       born: Date.now(),
-      rotation: (Math.random() - 0.5) * 0.1,
-      ang: 0,
-    });
+      ttl: ttl,
+      body: null,
+      bodyW: 0,
+      bodyH: 0,
+    };
+    state.particles.push(particle);
+
+    var M = window.Matter;
+
+    function initBody(w, h) {
+      var baseSize = state.emoteSize;
+      var ar = w / h;
+      var bodyW, bodyH;
+      if (ar >= 1) {
+        bodyW = baseSize;
+        bodyH = Math.max(baseSize / ar, baseSize * 0.3);
+      } else {
+        bodyH = baseSize;
+        bodyW = Math.max(baseSize * ar, baseSize * 0.3);
+      }
+
+      var maxDim = Math.max(bodyW, bodyH);
+      var margin = maxDim;
+      var x = margin + Math.random() * (window.innerWidth - margin * 2);
+      if (x + bodyW > window.innerWidth) x = window.innerWidth - bodyW - margin;
+      if (x < margin) x = margin;
+
+      var restitution = CONFIG.RESTITUTION_BASE * state.bounceStrength;
+      var density = CONFIG.DENSITY_BASE * (0.5 + state.collisionStrength);
+
+      var body = M.Bodies.rectangle(x, -bodyH, bodyW, bodyH, {
+        restitution: restitution,
+        friction: CONFIG.FRICTION,
+        frictionStatic: CONFIG.FRICTION_STATIC,
+        frictionAir: CONFIG.FRICTION_AIR,
+        density: density,
+        chamfer: { radius: Math.min(4, bodyW * 0.1, bodyH * 0.1) },
+      });
+
+      M.Body.setVelocity(body, {
+        x: (Math.random() - 0.5) * 2,
+        y: Math.random() * 1 + 1.5,
+      });
+
+      M.Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.05);
+      M.Composite.add(state.engine.world, body);
+
+      particle.body = body;
+      particle.bodyW = bodyW;
+      particle.bodyH = bodyH;
+
+      img.src = url;
+      img.style.width = bodyW + 'px';
+      img.style.height = bodyH + 'px';
+      state.container.appendChild(img);
+    }
+
+    var loaded = false;
+    img.onload = function () {
+      if (loaded) return;
+      loaded = true;
+      initBody(img.naturalWidth || state.emoteSize, img.naturalHeight || state.emoteSize);
+    };
+    img.onerror = function () {
+      if (loaded) return;
+      loaded = true;
+      initBody(state.emoteSize, state.emoteSize);
+    };
+
+    if (img.complete && img.naturalWidth > 0) {
+      img.onload();
+    } else {
+      img.src = url;
+    }
   }
 
+  /* ===== PHYSICS UPDATE ===== */
+  var TICK_MS = 16.667;
+
   function updateParticles() {
+    if (!state.engine || !window.Matter) return;
+    var M = window.Matter;
     var now = Date.now();
-    var ttl = state.emoteTTL;
-    var gravity = CONFIG.GRAVITY;
-    var friction = CONFIG.FRICTION;
-    var wallBounce = CONFIG.WALL_BOUNCE;
-    var groundBounce = CONFIG.GROUND_BOUNCE;
-    var push = CONFIG.COLLISION_PUSH;
-    var w = window.innerWidth;
-    var h = window.innerHeight;
+
+    M.Engine.update(state.engine, TICK_MS);
 
     for (var i = state.particles.length - 1; i >= 0; i--) {
       var p = state.particles[i];
+      if (!p.body) continue;
+
       var age = now - p.born;
 
-      if (age > ttl) {
+      if (age > p.ttl) {
         p.el.remove();
+        M.Composite.remove(state.engine.world, p.body);
         state.particles.splice(i, 1);
         continue;
       }
 
-      p.vy += gravity;
-      p.vx *= friction;
-      p.ang += p.rotation;
+      p.el.style.left = (p.body.position.x - p.bodyW / 2) + 'px';
+      p.el.style.top = (p.body.position.y - p.bodyH / 2) + 'px';
+      p.el.style.transform = 'rotate(' + (p.body.angle * 180 / Math.PI) + 'deg)';
 
-      p.x += p.vx;
-      p.y += p.vy;
-
-      var half = p.size / 2;
-
-      if (p.x - half < 0) {
-        p.x = half;
-        p.vx = -p.vx * wallBounce;
-      } else if (p.x + half > w) {
-        p.x = w - half;
-        p.vx = -p.vx * wallBounce;
-      }
-
-      if (p.y + half > h) {
-        p.y = h - half;
-        p.vy = -p.vy * groundBounce;
-        if (Math.abs(p.vy) < 0.5) p.vy = 0;
-      }
-
-      for (var j = i + 1; j < state.particles.length; j++) {
-        var other = state.particles[j];
-        var dx = other.x - p.x;
-        var dy = other.y - p.y;
-        var dist = Math.sqrt(dx * dx + dy * dy);
-        var minDist = (p.size + other.size) / 2;
-
-        if (dist < minDist && dist > 0.01) {
-          var overlap = (minDist - dist) / 2;
-          var nx = dx / dist;
-          var ny = dy / dist;
-          p.x -= nx * overlap;
-          p.y -= ny * overlap;
-          other.x += nx * overlap;
-          other.y += ny * overlap;
-          p.vx -= nx * push;
-          p.vy -= ny * push;
-          other.vx += nx * push;
-          other.vy += ny * push;
-        }
-      }
-
-      var fadeStart = ttl * 0.65;
+      var fadeStart = p.ttl * 0.7;
       if (age > fadeStart) {
-        p.el.style.opacity = 1 - (age - fadeStart) / (ttl - fadeStart);
+        p.el.style.opacity = 1 - (age - fadeStart) / (p.ttl - fadeStart);
       }
-
-      p.el.style.left = (p.x - half) + 'px';
-      p.el.style.top = (p.y - half) + 'px';
-      p.el.style.transform = 'rotate(' + p.ang + 'rad)';
     }
   }
 
@@ -373,16 +403,15 @@
         document.body.appendChild(state.container);
       }
 
+      initPhysics();
+      buildWalls();
+
       state.running = true;
+      state.twitchId = null;
       spawnCount = 0;
-      console.log('[EmoteRain] animation loop started');
+      dispatchStatus('Дождь эмоутов запущен для #' + channel);
 
-      var self = this;
-      fetch7TVEmotes(channel).then(function () {
-        console.log('[EmoteRain] 7TV fetch done, connecting IRC...');
-        if (state.running) connectIRC();
-      });
-
+      connectIRC();
       state.animFrame = requestAnimationFrame(animate);
     },
 
@@ -396,12 +425,17 @@
         state.animFrame = null;
       }
 
-      console.log('[EmoteRain] removing ' + state.particles.length + ' particles');
       for (var i = 0; i < state.particles.length; i++) {
         state.particles[i].el.remove();
+        if (state.engine && window.Matter && state.particles[i].body) {
+          window.Matter.Composite.remove(state.engine.world, state.particles[i].body);
+        }
       }
       state.particles = [];
+      state.emotes7tv.clear();
+      state.twitchId = null;
       spawnCount = 0;
+      dispatchStatus('Дождь эмоутов остановлен');
     },
 
     isRunning: function () {
@@ -412,4 +446,8 @@
       readSettings();
     },
   };
+
+  window.addEventListener('resize', function () {
+    if (state.engine && window.Matter) buildWalls();
+  });
 })();
