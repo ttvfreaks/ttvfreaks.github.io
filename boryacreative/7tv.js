@@ -53,7 +53,11 @@
     return fetch(url)
       .then(function (res) {
         console.log('[EmoteRain] 7TV API response status:', res.status);
-        if (!res.ok) throw new Error('7TV API error ' + res.status);
+        if (!res.ok) {
+          return res.text().then(function (body) {
+            throw new Error('7TV API error ' + res.status + ': ' + body.slice(0, 200));
+          });
+        }
         return res.json();
       })
       .then(function (data) {
