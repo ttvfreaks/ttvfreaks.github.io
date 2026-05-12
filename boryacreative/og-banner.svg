@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0e0e10"/>
+      <stop offset="50%" stop-color="#1a0808"/>
+      <stop offset="100%" stop-color="#0e0e10"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff0000" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#ff0000" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ff0000" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#ff0000" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#ff0000" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="line2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff0000" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#ff0000" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="hexClip">
+      <polygon points="300,0 600,0 750,433 600,630 300,630 150,433"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Glow -->
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Grid dots -->
+  <g fill="#ff0000" opacity="0.06">
+    <circle cx="60" cy="60" r="2"/>
+    <circle cx="180" cy="60" r="2"/>
+    <circle cx="300" cy="60" r="2"/>
+    <circle cx="420" cy="60" r="2"/>
+    <circle cx="540" cy="60" r="2"/>
+    <circle cx="660" cy="60" r="2"/>
+    <circle cx="780" cy="60" r="2"/>
+    <circle cx="900" cy="60" r="2"/>
+    <circle cx="1020" cy="60" r="2"/>
+    <circle cx="1140" cy="60" r="2"/>
+    <circle cx="60" cy="180" r="2"/>
+    <circle cx="180" cy="180" r="2"/>
+    <circle cx="300" cy="180" r="2"/>
+    <circle cx="420" cy="180" r="2"/>
+    <circle cx="540" cy="180" r="2"/>
+    <circle cx="660" cy="180" r="2"/>
+    <circle cx="780" cy="180" r="2"/>
+    <circle cx="900" cy="180" r="2"/>
+    <circle cx="1020" cy="180" r="2"/>
+    <circle cx="1140" cy="180" r="2"/>
+    <circle cx="60" cy="300" r="2"/>
+    <circle cx="180" cy="300" r="2"/>
+    <circle cx="300" cy="300" r="2"/>
+    <circle cx="420" cy="300" r="2"/>
+    <circle cx="540" cy="300" r="2"/>
+    <circle cx="660" cy="300" r="2"/>
+    <circle cx="780" cy="300" r="2"/>
+    <circle cx="900" cy="300" r="2"/>
+    <circle cx="1020" cy="300" r="2"/>
+    <circle cx="1140" cy="300" r="2"/>
+    <circle cx="60" cy="420" r="2"/>
+    <circle cx="180" cy="420" r="2"/>
+    <circle cx="300" cy="420" r="2"/>
+    <circle cx="420" cy="420" r="2"/>
+    <circle cx="540" cy="420" r="2"/>
+    <circle cx="660" cy="420" r="2"/>
+    <circle cx="780" cy="420" r="2"/>
+    <circle cx="900" cy="420" r="2"/>
+    <circle cx="1020" cy="420" r="2"/>
+    <circle cx="1140" cy="420" r="2"/>
+    <circle cx="60" cy="540" r="2"/>
+    <circle cx="180" cy="540" r="2"/>
+    <circle cx="300" cy="540" r="2"/>
+    <circle cx="420" cy="540" r="2"/>
+    <circle cx="540" cy="540" r="2"/>
+    <circle cx="660" cy="540" r="2"/>
+    <circle cx="780" cy="540" r="2"/>
+    <circle cx="900" cy="540" r="2"/>
+    <circle cx="1020" cy="540" r="2"/>
+    <circle cx="1140" cy="540" r="2"/>
+  </g>
+
+  <!-- Top accent line -->
+  <rect x="0" y="0" width="1200" height="4" fill="#ff0000"/>
+
+  <!-- Diagonal divider -->
+  <polygon points="700,0 1200,0 1200,630 500,630" fill="#ff0000" opacity="0.03"/>
+
+  <!-- Game pad icon (simplified) -->
+  <g transform="translate(80, 80)" opacity="0.08">
+    <rect x="0" y="30" width="160" height="100" rx="16" fill="none" stroke="#ff0000" stroke-width="4"/>
+    <circle cx="40" cy="80" r="12" fill="#ff0000"/>
+    <circle cx="80" cy="80" r="12" fill="#ff0000"/>
+    <circle cx="120" cy="80" r="12" fill="#ff0000"/>
+    <line x1="80" y1="80" x2="80" y2="50" stroke="#ff0000" stroke-width="3"/>
+  </g>
+
+  <!-- Hexagonal decorative element -->
+  <g transform="translate(920, 110)" opacity="0.06">
+    <polygon points="60,0 120,35 120,105 60,140 0,105 0,35" fill="none" stroke="#ff0000" stroke-width="3"/>
+    <polygon points="60,15 105,42 105,98 60,125 15,98 15,42" fill="none" stroke="#ff0000" stroke-width="1.5"/>
+  </g>
+
+  <!-- Large "TAA" label -->
+  <text x="80" y="260" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" fill="#ff0000" letter-spacing="6" opacity="0.3">ТУРНИР: АРЕНА АДАПТАЦИИ</text>
+
+  <!-- Main title -->
+  <text x="80" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="88" font-weight="900" fill="#efeff1" letter-spacing="-2">Турнир:</text>
+  <text x="80" y="430" font-family="system-ui, -apple-system, sans-serif" font-size="88" font-weight="900" fill="#efeff1" letter-spacing="-2">Арена</text>
+  <text x="80" y="520" font-family="system-ui, -apple-system, sans-serif" font-size="88" font-weight="900" fill="#efeff1" letter-spacing="-2">Адаптации</text>
+
+  <!-- Decorative line next to title -->
+  <line x1="80" y1="545" x2="450" y2="545" stroke="url(#line)" stroke-width="3"/>
+
+  <!-- VS badge -->
+  <g transform="translate(820, 380)">
+    <rect x="0" y="0" width="280" height="160" rx="12" fill="#1f1f23" stroke="#2d2d31" stroke-width="1"/>
+    <rect x="60" y="20" width="160" height="4" rx="2" fill="#ff0000"/>
+    <text x="140" y="72" font-family="system-ui, -apple-system, sans-serif" font-size="52" font-weight="900" fill="#ff0000" text-anchor="middle">VS</text>
+    <text x="140" y="106" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#5c5c5e" text-anchor="middle" letter-spacing="3">ВЫБЕРИ СВОЮ ИГРУ</text>
+    <rect x="60" y="136" width="160" height="4" rx="2" fill="#0066ff"/>
+  </g>
+
+  <!-- Bottom accent line -->
+  <rect x="0" y="626" width="1200" height="4" fill="url(#line)"/>
+
+  <!-- Twitch-like chat badge at bottom -->
+  <g transform="translate(80, 570)">
+    <rect x="0" y="0" width="280" height="36" rx="6" fill="#1f1f23"/>
+    <circle cx="18" cy="18" r="5" fill="#ff0000"/>
+    <text x="32" y="23" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#adadb8">TAA · Инструмент для стримера</text>
+  </g>
+</svg>
