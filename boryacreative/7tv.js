@@ -40,40 +40,102 @@
     } catch (e) {}
   }
 
-  /* ===== 7TV API (через Cloudflare Worker для обхода CORS) ===== */
-  function fetch7TVEmotes(channel) {
-    var apiUrl = 'https://api.7tv.io/v3/users/twitch/' + encodeURIComponent(channel);
+  /* ===== 7TV EMOTES ===== */
+  function load7TVEmotes(data) {
+    var emoteSet = data.emote_set || data;
+    var emotes = (emoteSet.emotes || []);
+    state.emotes7tv.clear();
+    emotes.forEach(function (em) {
+      var hostUrl = em.data && em.data.host && em.data.host.url;
+      if (hostUrl) {
+        state.emotes7tv.set(em.name, 'https:' + hostUrl + '/' + em.id + '/4x.webp');
+      }
+    });
+    console.log('[EmoteRain] 7TV loaded ' + state.emotes7tv.size + ' emotes');
+  }
 
+  function fetch7TVEmotes(channel) {
+    // 1) Прямой GraphQL к 7tv.io (как расширение 7TV)
+    console.log('[EmoteRain] fetching 7TV emotes via 7tv.io/gql...');
+    return fetch7TVEmotesDirect(channel)
+      .then(function (ok) {
+        if (!ok) {
+          // 2) Fallback — локальный файл
+          console.log('[EmoteRain] direct failed, trying local file...');
+          return fetch('7tv-emotes.json').then(function (r) {
+            if (!r.ok) throw new Error('no local file');
+            return r.json();
+          }).then(function (data) {
+            console.log('[EmoteRain] loaded 7tv-emotes.json (' + Object.keys(data).length + ' emotes)');
+            state.emotes7tv.clear();
+            Object.keys(data).forEach(function (name) {
+              state.emotes7tv.set(name, data[name]);
+            });
+          }).catch(function () {
+            // 3) Последний шанс — прокси
+            console.log('[EmoteRain] local file not found, trying proxy...');
+            return fetch7TVEmotesViaProxy(channel);
+          });
+        }
+      });
+  }
+
+  function fetch7TVEmotesDirect(channel) {
+    var body = JSON.stringify({
+      operationName: 'GetUserByConnection',
+      variables: { platform: 'TWITCH', username: channel },
+      query: 'query GetUserByConnection($platform: ConnectionPlatform!, $username: String) { user: userByConnection(platform: $platform, username: $username) { id emote_set { emotes { id name data { host { url } } } } } }',
+    });
+
+    return fetch('https://7tv.io/v3/gql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: body,
+    })
+      .then(function (res) {
+        console.log('[EmoteRain] 7tv.io/gql response status:', res.status);
+        if (!res.ok) {
+          return res.text().then(function (t) { throw new Error('HTTP ' + res.status + ': ' + t.slice(0, 100)); });
+        }
+        return res.json();
+      })
+      .then(function (json) {
+        var user = json.data && json.data.user;
+        if (!user) throw new Error('no user in response');
+        var emotes = (user.emote_set && user.emote_set.emotes) || [];
+        console.log('[EmoteRain] 7tv.io/gql emotes:', emotes.length);
+        load7TVEmotes({ emote_set: { emotes: emotes } });
+        return true;
+      })
+      .catch(function (e) {
+        console.warn('[EmoteRain] 7tv.io/gql failed: ' + e.message);
+        return false;
+      });
+  }
+
+  function fetch7TVEmotesViaProxy(channel) {
+    var apiUrl = 'https://api.7tv.io/v3/users/twitch/' + encodeURIComponent(channel);
     var url = state.proxyUrl
       ? state.proxyUrl + '?url=' + encodeURIComponent(apiUrl)
       : apiUrl;
 
-    console.log('[EmoteRain] fetching 7TV emotes from:', url);
+    console.log('[EmoteRain] fetching 7TV via proxy:', url);
 
     return fetch(url)
       .then(function (res) {
-        console.log('[EmoteRain] 7TV API response status:', res.status);
+        console.log('[EmoteRain] proxy response status:', res.status);
         if (!res.ok) {
           return res.text().then(function (body) {
-            throw new Error('7TV API error ' + res.status + ': ' + body.slice(0, 200));
+            throw new Error('proxy error ' + res.status + ': ' + body.slice(0, 200));
           });
         }
         return res.json();
       })
       .then(function (data) {
-        var emotes = (data.emote_set && data.emote_set.emotes) || [];
-        console.log('[EmoteRain] 7TV raw emotes count:', emotes.length);
-        state.emotes7tv.clear();
-        emotes.forEach(function (em) {
-          var hostUrl = em.data && em.data.host && em.data.host.url;
-          if (hostUrl) {
-            state.emotes7tv.set(em.name, 'https:' + hostUrl + '/' + em.id + '/4x.webp');
-          }
-        });
-        console.log('[EmoteRain] 7TV loaded ' + state.emotes7tv.size + ' emotes. Names:', Array.from(state.emotes7tv.keys()));
+        load7TVEmotes(data);
       })
       .catch(function (e) {
-        console.warn('[EmoteRain] 7TV fetch failed: ' + e.message);
+        console.warn('[EmoteRain] proxy fetch failed: ' + e.message);
       });
   }
 
