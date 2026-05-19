@@ -30,6 +30,8 @@
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore-compat.js"></script>
   <link rel="stylesheet" href="styles.css?nocache=sosal4">
   <link rel="icon"
     href="https://static-cdn.jtvnw.net/jtv_user_pictures/c50c86c1-38b8-4686-add6-dbd66606d729-profile_image-70x70.png">
@@ -100,11 +102,36 @@
         <p class="dropzone-sub">или нажмите для выбора файла</p>
       </div>
       <input type="file" id="battle-file-input" accept=".json" hidden>
+      <div class="sync-divider"><span>или</span></div>
+      <div class="sync-code-input-wrap">
+        <input type="text" id="sync-code-input" placeholder="Код комнаты" maxlength="4" class="sync-code-input">
+        <button class="btn btn-secondary" id="sync-join-btn">Присоединиться</button>
+      </div>
+      <div id="sync-join-status" class="sync-status" style="display:none"></div>
+    </div>
+
+    <div id="battle-sync" class="battle-phase">
+      <div class="sync-panel">
+        <p class="sync-code-label">Код комнаты:</p>
+        <div class="sync-code-row">
+          <div class="sync-code-big" id="sync-code-big"></div>
+          <button class="btn btn-icon sync-copy-btn" id="sync-copy-btn" title="Скопировать код">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
+        <p class="sync-hint">Отправьте этот код оппоненту</p>
+        <button class="btn btn-primary" id="sync-start-btn">
+          <i class="fas fa-play"></i> Начать
+        </button>
+      </div>
     </div>
 
     <div id="battle-reveal" class="battle-phase hidden">
       <button class="btn btn-secondary battle-reset-btn" id="battle-reset-reveal">
         <i class="fas fa-times"></i>
+      </button>
+      <button class="btn btn-secondary battle-skip-btn" id="reveal-skip-btn" title="Пропустить все">
+        <i class="fas fa-forward"></i> Скипнуть интро
       </button>
       <div class="reveal-header">
         <div class="reveal-cat" id="reveal-cat"></div>
@@ -119,6 +146,9 @@
     <div id="battle-overview" class="battle-phase hidden">
       <button class="btn btn-secondary battle-reset-btn" id="battle-reset-overview">
         <i class="fas fa-undo"></i> Заново
+      </button>
+      <button class="btn btn-secondary battle-sync-btn" id="sync-refresh-btn" title="Синхронизировать">
+        <i class="fas fa-sync"></i> Синхронизировать
       </button>
       <div class="overview-grid">
         <div class="overview-col" data-cat="streamer">
@@ -359,12 +389,16 @@
       <div class="faq-column">
         <div class="faq-section">
           <h2>История изменений</h2>
-          <div class="changelog" id="changelog">
+            <div class="changelog" id="changelog">
             <div class="changelog-entry" data-id="2026-05-19">
               <span class="changelog-date">19.05.2026</span>
               <ul>
-                <li>Emote Rain подгружает эмоуты стримера из совместного чата (должен по крайней мере, я хз будет ли это
-                  работать, по крайней мере весь функционал до этого апдейта остался рабочим)
+                <li>Добавлена синхронизация боевого режима через Firebase. После загрузки JSON можно создать комнату и
+                  поделиться кодом со вторым стримером — счёт и победители игр синхронизируются в реальном времени
+                </li>
+                <li>Emote Rain подгружает 7TV эмоуты стримера из совместного чата (Shared Chat)
+                </li>
+                <li>Пофикшен баг с дублированием эмоутов после переподключения к Twitch IRC
                 </li>
               </ul>
             </div>
@@ -391,6 +425,7 @@
   <div id="emote-rain-container"></div>
   <script src="app.js?nocache=sosal4"></script>
   <script src="7tv.js?nocache=sosal4"></script>
+  <script src="firebase-sync.js?nocache=sosal4"></script>
 </body>
 
 </html>

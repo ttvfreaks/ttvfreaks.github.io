@@ -14,6 +14,9 @@ const state = {
     index: -1,
     isTyping: false,
     wins: { streamer: 0, opponent: 0 },
+    syncCode: null,
+    syncUnsub: null,
+    pendingData: null,
   },
 };
 
@@ -409,6 +412,8 @@ function updateBattlePhase() {
   document.querySelectorAll('.battle-phase').forEach(p => p.classList.remove('active'));
   if (state.battle.phase === 'upload') {
     document.getElementById('battle-upload').classList.add('active');
+  } else if (state.battle.phase === 'sync') {
+    document.getElementById('battle-sync').classList.add('active');
   } else if (state.battle.phase === 'reveal') {
     document.getElementById('battle-reveal').classList.add('active');
   } else if (state.battle.phase === 'overview') {
@@ -660,6 +665,45 @@ function setupBattle() {
   document.getElementById('battle-reset-overview').addEventListener('click', function () {
     resetBattle();
   });
+
+  // Reveal skip
+  document.getElementById('reveal-skip-btn').addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (state.battle.phase !== 'reveal') return;
+    stopTypewriter();
+    state.battle.index = state.battle.queue.length;
+    showBattleOverview();
+  });
+
+  // Sync
+  document.getElementById('sync-join-btn').addEventListener('click', handleSyncJoin);
+  document.getElementById('sync-start-btn').addEventListener('click', handleSyncStart);
+  document.getElementById('sync-refresh-btn').addEventListener('click', function () {
+    if (state.battle.syncData) {
+      applySyncData(state.battle.syncData);
+      var icon = this.querySelector('i');
+      icon.className = 'fas fa-check';
+      setTimeout(function () { icon.className = 'fas fa-sync'; }, 1500);
+    }
+  });
+  document.getElementById('sync-copy-btn').addEventListener('click', function () {
+    var code = document.getElementById('sync-code-big').textContent;
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(function () {
+      var icon = document.querySelector('#sync-copy-btn i');
+      if (!icon) return;
+      icon.className = 'fas fa-check';
+      setTimeout(function () { icon.className = 'fas fa-copy'; }, 1500);
+    }).catch(function () {
+      var icon = document.querySelector('#sync-copy-btn i');
+      if (!icon) return;
+      icon.className = 'fas fa-times';
+      setTimeout(function () { icon.className = 'fas fa-copy'; }, 1500);
+    });
+  });
+  document.getElementById('sync-code-input').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') handleSyncJoin();
+  });
 }
 
 function loadBattleFile(file) {
@@ -672,7 +716,7 @@ function loadBattleFile(file) {
     try {
       const data = JSON.parse(e.target.result);
       if (!validateConfig(data)) throw new Error('Неверный формат JSON');
-      startBattle(data);
+      autoCreateRoom(data);
     } catch (err) {
       alert('Ошибка: ' + err.message);
     }
@@ -681,6 +725,88 @@ function loadBattleFile(file) {
     alert('Ошибка при чтении файла.');
   };
   reader.readAsText(file);
+}
+
+function autoCreateRoom(data) {
+  if (!window.TAASync) {
+    startBattle(data);
+    return;
+  }
+  state.battle.pendingData = data;
+  var config = {
+    streamerName: data.streamerName,
+    opponentName: data.opponentName,
+    categories: data.categories,
+    games: data.games,
+  };
+  TAASync.createRoom(config).then(function (code) {
+    state.battle.syncCode = code;
+    state.battle.syncUnsub = TAASync.joinRoom(code, onSyncUpdate);
+    document.getElementById('battle-upload').classList.remove('active');
+    document.getElementById('sync-code-big').textContent = code;
+    document.getElementById('battle-sync').classList.add('active');
+  }).catch(function (err) {
+    console.warn('[Sync] createRoom failed:', err);
+    startBattle(data);
+  });
+}
+
+function handleSyncJoin() {
+  if (!window.TAASync) {
+    showJoinStatus('Firebase не подключён', 'error');
+    return;
+  }
+  var code = document.getElementById('sync-code-input').value.trim().toUpperCase();
+  if (!code || code.length !== 4) {
+    showJoinStatus('Введите 4-символьный код', 'error');
+    return;
+  }
+
+  showJoinStatus('Подключение...', '');
+  var isFirst = true;
+  state.battle.syncUnsub = TAASync.joinRoom(code, function (data) {
+    if (data && data.error === 'not_found') {
+      showJoinStatus('Комната не найдена', 'error');
+      return;
+    }
+    if (data) {
+      hideJoinStatus();
+      state.battle.syncCode = code;
+      if (isFirst) {
+        isFirst = false;
+        state.battle.data = data.roomConfig;
+        state.battle.syncData = data;
+        startBattle(data.roomConfig);
+      } else {
+        onSyncUpdate(data);
+      }
+    }
+  });
+}
+
+function handleSyncStart() {
+  var data = state.battle.pendingData;
+  if (!data) return;
+  startBattle(data);
+}
+
+function onSyncUpdate(data) {
+  if (!data || !data.roomConfig) return;
+  state.battle.syncData = data;
+  if (state.battle.phase === 'overview') {
+    applySyncData(data);
+  }
+}
+
+function showJoinStatus(msg, type) {
+  var el = document.getElementById('sync-join-status');
+  el.textContent = msg;
+  el.className = 'sync-status' + (type ? ' ' + type : '');
+  el.style.display = 'block';
+}
+
+function hideJoinStatus() {
+  document.getElementById('sync-join-status').style.display = 'none';
 }
 
 function startBattle(data) {
@@ -692,6 +818,7 @@ function startBattle(data) {
   state.battle.wins = { streamer: 0, opponent: 0 };
 
   document.getElementById('battle-upload').classList.remove('active');
+  document.getElementById('battle-sync').classList.remove('active');
   document.getElementById('battle-reveal').classList.add('active');
   document.getElementById('battle-overview').classList.remove('active');
 
@@ -760,12 +887,18 @@ function showBattleOverview() {
   document.getElementById('battle-reveal').classList.remove('active');
   document.getElementById('battle-overview').classList.add('active');
 
+  if (state.battle.syncCode && window.TAASync && !state.battle.syncUnsub) {
+    state.battle.syncUnsub = TAASync.joinRoom(state.battle.syncCode, onSyncUpdate);
+  }
+
   const data = state.battle.data;
   const cats = [
     { key: 'streamer', title: data.categories[1] || 'Стример #1' },
     { key: 'neutral', title: data.categories[0] || 'Нейтральные' },
     { key: 'opponent', title: data.categories[2] || 'Стример #2' },
   ];
+
+  const isSynced = !!(state.battle.syncCode && window.TAASync);
 
   cats.forEach(({ key, title }) => {
     const col = document.querySelector('.overview-col[data-cat="' + key + '"]');
@@ -782,10 +915,12 @@ function showBattleOverview() {
     }
     col.style.display = 'flex';
 
-    gameList.forEach(name => {
+    gameList.forEach((name, idx) => {
+      const gameKey = key + ':' + idx;
       const card = document.createElement('div');
       card.className = 'overview-game';
       card.dataset.winner = 'none';
+      card.dataset.gameKey = gameKey;
 
       const btnS = document.createElement('button');
       btnS.className = 'game-btn game-btn-s';
@@ -793,23 +928,16 @@ function showBattleOverview() {
       btnS.addEventListener('click', function (e) {
         e.stopPropagation();
         const card = this.parentElement;
+        const gameKey = card.dataset.gameKey;
         const current = card.dataset.winner;
-        if (current === 'streamer') {
-          card.dataset.winner = 'none';
-          card.classList.remove('winner-streamer');
-          this.classList.remove('active');
-          card.querySelector('.game-btn-o').classList.remove('active');
-          state.battle.wins.streamer--;
+        const newWinner = current === 'streamer' ? 'none' : 'streamer';
+        if (isSynced) {
+          TAASync.updateGameWinner(state.battle.syncCode, gameKey, newWinner);
         } else {
-          card.dataset.winner = 'streamer';
-          card.classList.remove('winner-opponent');
-          card.classList.add('winner-streamer');
-          this.classList.add('active');
-          card.querySelector('.game-btn-o').classList.remove('active');
-          if (current === 'opponent') state.battle.wins.opponent--;
-          state.battle.wins.streamer++;
+          applyGameWinner(card, newWinner);
+          state.battle.wins = recalcWins();
+          updateScoreDisplay();
         }
-        updateScoreDisplay();
       });
 
       const nameSpan = document.createElement('span');
@@ -822,23 +950,16 @@ function showBattleOverview() {
       btnO.addEventListener('click', function (e) {
         e.stopPropagation();
         const card = this.parentElement;
+        const gameKey = card.dataset.gameKey;
         const current = card.dataset.winner;
-        if (current === 'opponent') {
-          card.dataset.winner = 'none';
-          card.classList.remove('winner-opponent');
-          this.classList.remove('active');
-          card.querySelector('.game-btn-s').classList.remove('active');
-          state.battle.wins.opponent--;
+        const newWinner = current === 'opponent' ? 'none' : 'opponent';
+        if (isSynced) {
+          TAASync.updateGameWinner(state.battle.syncCode, gameKey, newWinner);
         } else {
-          card.dataset.winner = 'opponent';
-          card.classList.remove('winner-streamer');
-          card.classList.add('winner-opponent');
-          this.classList.add('active');
-          card.querySelector('.game-btn-s').classList.remove('active');
-          if (current === 'streamer') state.battle.wins.streamer--;
-          state.battle.wins.opponent++;
+          applyGameWinner(card, newWinner);
+          state.battle.wins = recalcWins();
+          updateScoreDisplay();
         }
-        updateScoreDisplay();
       });
 
       card.appendChild(btnS);
@@ -848,11 +969,58 @@ function showBattleOverview() {
     });
   });
 
+  if (isSynced && state.battle.syncData) {
+    applySyncData(state.battle.syncData);
+  }
+
   document.getElementById('battle-score').classList.remove('hidden');
   updateScoreDisplay();
 }
 
+function applyGameWinner(card, winner) {
+  card.dataset.winner = 'none';
+  card.classList.remove('winner-streamer', 'winner-opponent');
+  card.querySelector('.game-btn-s').classList.remove('active');
+  card.querySelector('.game-btn-o').classList.remove('active');
+  if (winner === 'streamer') {
+    card.dataset.winner = 'streamer';
+    card.classList.add('winner-streamer');
+    card.querySelector('.game-btn-s').classList.add('active');
+  } else if (winner === 'opponent') {
+    card.dataset.winner = 'opponent';
+    card.classList.add('winner-opponent');
+    card.querySelector('.game-btn-o').classList.add('active');
+  }
+}
+
+function recalcWins() {
+  var wins = { streamer: 0, opponent: 0 };
+  document.querySelectorAll('.overview-game').forEach(function (card) {
+    var w = card.dataset.winner;
+    if (w === 'streamer') wins.streamer++;
+    else if (w === 'opponent') wins.opponent++;
+  });
+  return wins;
+}
+
+function applySyncData(data) {
+  if (!data.gameWinners) return;
+  document.querySelectorAll('.overview-game').forEach(function (card) {
+    var key = card.dataset.gameKey;
+    if (key && data.gameWinners.hasOwnProperty(key)) {
+      applyGameWinner(card, data.gameWinners[key]);
+    }
+  });
+  if (window.TAASync) {
+    state.battle.wins = TAASync.calculateWins(data.gameWinners);
+  }
+  updateScoreDisplay();
+}
+
 function resetBattle() {
+  if (state.battle.syncUnsub) {
+    state.battle.syncUnsub();
+  }
   state.battle = {
     data: null,
     phase: 'upload',
@@ -860,10 +1028,14 @@ function resetBattle() {
     index: -1,
     isTyping: false,
     wins: { streamer: 0, opponent: 0 },
+    syncCode: null,
+    syncUnsub: null,
+    pendingData: null,
   };
   stopTypewriter();
 
   document.getElementById('battle-upload').classList.add('active');
+  document.getElementById('battle-sync').classList.remove('active');
   document.getElementById('battle-reveal').classList.remove('active');
   document.getElementById('battle-overview').classList.remove('active');
 
