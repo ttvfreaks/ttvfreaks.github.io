@@ -683,6 +683,20 @@ textarea {
   z-index: 10;
 }
 
+.battle-skip-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10;
+}
+
+.battle-sync-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10;
+}
+
 /* Overview */
 #battle-overview {
   justify-content: flex-start;
@@ -1272,6 +1286,134 @@ textarea {
   left: 20px;
   background: var(--accent);
   box-shadow: 0 0 6px var(--accent);
+}
+
+/* ===== SYNC PANEL ===== */
+.sync-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  max-width: 400px;
+  width: 100%;
+}
+
+.sync-divider {
+  margin: 20px 0;
+  max-width: 480px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.sync-divider::before,
+.sync-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.sync-code-input-wrap {
+  display: flex;
+  gap: 8px;
+  max-width: 480px;
+  width: 100%;
+}
+
+.sync-code-input {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 24px !important;
+  font-weight: 800;
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  font-family: 'Courier New', monospace !important;
+}
+
+.sync-code-display {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.sync-code-label {
+  font-size: 0.75em;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.sync-code-big {
+  font-size: 64px;
+  font-weight: 800;
+  letter-spacing: 12px;
+  color: var(--accent);
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 20px var(--accent-dim);
+  line-height: 1;
+}
+
+.sync-hint {
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.sync-code-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sync-code-big {
+  -webkit-text-security: disc;
+}
+
+.sync-code-input {
+  -webkit-text-security: disc;
+}
+
+.sync-copy-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 18px;
+}
+
+.sync-status {
+  font-size: 0.85em;
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: var(--radius-element);
+  text-align: center;
+}
+
+.sync-status.error {
+  background: rgba(255, 0, 0, 0.1);
+  color: #ff4444;
+}
+
+.sync-status.success {
+  background: rgba(0, 200, 0, 0.1);
+  color: #44ff44;
 }
 
 /* ===== EMOTE TOAST ===== */
