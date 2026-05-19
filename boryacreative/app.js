@@ -931,13 +931,12 @@ function showBattleOverview() {
         const gameKey = card.dataset.gameKey;
         const current = card.dataset.winner;
         const newWinner = current === 'streamer' ? 'none' : 'streamer';
+        applyGameWinner(card, newWinner);
         if (isSynced) {
           TAASync.updateGameWinner(state.battle.syncCode, gameKey, newWinner);
-        } else {
-          applyGameWinner(card, newWinner);
-          state.battle.wins = recalcWins();
-          updateScoreDisplay();
         }
+        state.battle.wins = recalcWins();
+        updateScoreDisplay();
       });
 
       const nameSpan = document.createElement('span');
@@ -953,13 +952,12 @@ function showBattleOverview() {
         const gameKey = card.dataset.gameKey;
         const current = card.dataset.winner;
         const newWinner = current === 'opponent' ? 'none' : 'opponent';
+        applyGameWinner(card, newWinner);
         if (isSynced) {
           TAASync.updateGameWinner(state.battle.syncCode, gameKey, newWinner);
-        } else {
-          applyGameWinner(card, newWinner);
-          state.battle.wins = recalcWins();
-          updateScoreDisplay();
         }
+        state.battle.wins = recalcWins();
+        updateScoreDisplay();
       });
 
       card.appendChild(btnS);
@@ -1009,6 +1007,8 @@ function applySyncData(data) {
     var key = card.dataset.gameKey;
     if (key && data.gameWinners.hasOwnProperty(key)) {
       applyGameWinner(card, data.gameWinners[key]);
+    } else {
+      applyGameWinner(card, 'none');
     }
   });
   if (window.TAASync) {
