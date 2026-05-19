@@ -156,6 +156,7 @@
     dispatchStatus('Подключение к чату Twitch...');
 
     ws.onopen = function () {
+      if (state.ws !== ws) return;
       console.log('[EmoteRain] IRC connected, joining #' + state.channel);
       dispatchStatus('Подключено к Twitch, вход в чат #' + state.channel);
       ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
@@ -164,6 +165,7 @@
     };
 
     ws.onmessage = function (event) {
+      if (state.ws !== ws) return;
       var lines = event.data.split('\r\n');
       for (var i = 0; i < lines.length; i++) {
         var line = lines[i];
@@ -187,6 +189,7 @@
     };
 
     ws.onclose = function () {
+      if (state.ws !== ws) return;
       console.log('[EmoteRain] IRC disconnected');
       state.ws = null;
       if (state.running) {
@@ -197,6 +200,7 @@
     };
 
     ws.onerror = function (e) {
+      if (state.ws !== ws) return;
       console.warn('[EmoteRain] IRC error:', e);
       window.dispatchEvent(new CustomEvent('emote-rain-error', { detail: 'Ошибка подключения к Twitch IRC' }));
     };
