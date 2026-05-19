@@ -1052,7 +1052,8 @@ textarea {
 .changelog {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  /* gap: 12px; */
+  margin-bottom: 10px;
 }
 
 .changelog-entry {
