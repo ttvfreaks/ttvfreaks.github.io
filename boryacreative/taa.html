@@ -32,7 +32,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="styles.css?nocache=sosal5">
+  <link rel="stylesheet" href="styles.css?nocache=anim4">
   <link rel="icon"
     href="https://static-cdn.jtvnw.net/jtv_user_pictures/c50c86c1-38b8-4686-add6-dbd66606d729-profile_image-70x70.png">
 </head>
@@ -144,6 +144,21 @@
     </div>
 
     <div id="battle-overview" class="battle-phase hidden">
+      <div id="mg-bottom-bar" class="mg-bottom-bar">
+        <div id="mini-games-bar" class="mini-games-bar">
+          <div id="mg-identity-bar">
+            <span style="font-size:13px;font-weight:600;color:var(--text-secondary);">Вы:</span>
+            <select id="mg-identity-select" class="mg-identity-select">
+              <option value="streamer">Стример #1</option>
+              <option value="opponent">Стример #2</option>
+            </select>
+          </div>
+
+          <button class="btn btn-primary btn-small" id="mg-games-btn"><i class="fas fa-dice"></i> Мини-игры</button>
+          <button class="btn btn-primary btn-small" id="mg-wheel-btn"><i class="fas fa-sync-alt"></i> Колесо</button>
+          <button class="btn btn-secondary btn-small" id="mg-log-btn"><i class="fas fa-list"></i> Лог</button>
+        </div>
+      </div>
       <button class="btn btn-secondary battle-reset-btn" id="battle-reset-overview">
         <i class="fas fa-undo"></i> Заново
       </button>
@@ -389,7 +404,7 @@
       <div class="faq-column">
         <div class="faq-section">
           <h2>История изменений</h2>
-            <div class="changelog" id="changelog">
+          <div class="changelog" id="changelog">
             <div class="changelog-entry" data-id="2026-05-19">
               <span class="changelog-date">19.05.2026</span>
               <ul>
@@ -423,9 +438,9 @@
   </section>
 
   <div id="emote-rain-container"></div>
-  <script src="app.js?nocache=sosal5"></script>
-  <script src="7tv.js?nocache=sosal5"></script>
-  <script src="firebase-sync.js?nocache=sosal5"></script>
+  <script src="app.js?nocache=anim5"></script>
+  <script src="7tv.js?nocache=anim4"></script>
+  <script src="firebase-sync.js?nocache=anim4"></script>
 </body>
 
 </html>

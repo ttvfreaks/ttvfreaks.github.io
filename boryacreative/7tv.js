@@ -15,7 +15,7 @@
     collisionStrength: 0.6,
     container: null,
     reconnectTimer: null,
-    fetchedChannels: {},
+    twitchId: null,
     engine: null,
     wallBodies: [],
   };
@@ -98,6 +98,7 @@
   function load7TVEmotes(data) {
     var emoteSet = data.emote_set || data;
     var emotes = (emoteSet.emotes || []);
+    state.emotes7tv.clear();
     emotes.forEach(function (em) {
       if (em.id && em.data && em.data.host) {
         state.emotes7tv.set(em.name, CDN_PROXY + 'https://cdn.7tv.app/emote/' + em.id + '/4x.webp');
@@ -108,7 +109,6 @@
   }
 
   function fetch7TVEmotes(twitchId) {
-    if (state.fetchedChannels[twitchId]) return;
     dispatchStatus('Загрузка 7TV эмоутов...');
     var body = JSON.stringify({
       operationName: 'GetUserByConnection',
@@ -136,7 +136,6 @@
           (set.emotes || []).forEach(function (em) { allEmotes.push(em); });
         });
         console.log('[EmoteRain] 7tv.io/gql loaded ' + allEmotes.length + ' emotes from ' + (user.emote_sets || []).length + ' sets');
-        state.fetchedChannels[twitchId] = true;
         load7TVEmotes({ emote_set: { emotes: allEmotes } });
       })
       .catch(function (e) {
@@ -156,7 +155,6 @@
     dispatchStatus('Подключение к чату Twitch...');
 
     ws.onopen = function () {
-      if (state.ws !== ws) return;
       console.log('[EmoteRain] IRC connected, joining #' + state.channel);
       dispatchStatus('Подключено к Twitch, вход в чат #' + state.channel);
       ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
@@ -165,7 +163,6 @@
     };
 
     ws.onmessage = function (event) {
-      if (state.ws !== ws) return;
       var lines = event.data.split('\r\n');
       for (var i = 0; i < lines.length; i++) {
         var line = lines[i];
@@ -177,9 +174,11 @@
         }
         if (line.indexOf('ROOMSTATE') !== -1) {
           var roomMatch = line.match(/room-id=(\d+)/);
-          if (roomMatch) {
-            console.log('[EmoteRain] got twitch room-id:', roomMatch[1]);
-            fetch7TVEmotes(roomMatch[1]);
+          if (roomMatch && !state.twitchId) {
+            state.twitchId = roomMatch[1];
+            console.log('[EmoteRain] got twitch room-id:', state.twitchId);
+            dispatchStatus('Получен ID канала, загрузка 7TV эмоутов...');
+            fetch7TVEmotes(state.twitchId);
           }
         }
         if (line.indexOf('PRIVMSG') !== -1) {
@@ -189,7 +188,6 @@
     };
 
     ws.onclose = function () {
-      if (state.ws !== ws) return;
       console.log('[EmoteRain] IRC disconnected');
       state.ws = null;
       if (state.running) {
@@ -200,7 +198,6 @@
     };
 
     ws.onerror = function (e) {
-      if (state.ws !== ws) return;
       console.warn('[EmoteRain] IRC error:', e);
       window.dispatchEvent(new CustomEvent('emote-rain-error', { detail: 'Ошибка подключения к Twitch IRC' }));
     };
@@ -218,8 +215,6 @@
   }
 
   function handleIRCMessage(line) {
-    var roomIdMatch = line.match(/room-id=(\d+)/);
-    if (roomIdMatch) fetch7TVEmotes(roomIdMatch[1]);
     var emotesMatch = line.match(/emotes=([^;\s]+)/);
     var msgMatch = line.match(/ PRIVMSG #[^ ]+ :(.+)$/);
     if (!msgMatch) return;
@@ -412,7 +407,7 @@
       buildWalls();
 
       state.running = true;
-      state.fetchedChannels = {};
+      state.twitchId = null;
       spawnCount = 0;
       dispatchStatus('Дождь эмоутов запущен для #' + channel);
 
@@ -438,7 +433,7 @@
       }
       state.particles = [];
       state.emotes7tv.clear();
-      state.fetchedChannels = {};
+      state.twitchId = null;
       spawnCount = 0;
       dispatchStatus('Дождь эмоутов остановлен');
     },

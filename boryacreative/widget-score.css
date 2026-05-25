@@ -1,0 +1,56 @@
+:root {
+  --accent: #ff0000;
+  --color-opponent: #0066ff;
+  --text-primary: #efeff1;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  width:100%; height:100%;
+  overflow:hidden;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--text-primary);
+  background: transparent;
+}
+
+#score-wrap {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  padding:16px 24px;
+  background:rgba(14,14,16,0.75);
+  border-radius:8px;
+  backdrop-filter:blur(4px);
+  width:fit-content;
+}
+
+.score-row {
+  display:flex;
+  align-items:center;
+  gap:20px;
+  font-size:22px;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+.score-label { min-width:80px; text-align:right; }
+
+.score-streamer .score-label { color:var(--accent); }
+.score-opponent .score-label { color:var(--color-opponent); }
+
+.score-num {
+  font-size:32px;
+  font-weight:800;
+  min-width:30px;
+  text-align:left;
+}
+
+.score-streamer .score-num { color:var(--accent); text-shadow:0 0 6px var(--accent); }
+.score-opponent .score-num { color:var(--color-opponent); text-shadow:0 0 6px var(--color-opponent); }
+
+.score-divider {
+  width:80px; height:1px;
+  background:rgba(255,255,255,0.15);
+}

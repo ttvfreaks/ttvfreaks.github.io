@@ -1101,11 +1101,629 @@ function markChangelogSeen() {
   document.getElementById('faq-badge').classList.remove('show');
 }
 
+// ===== MINI-GAMES =====
+function setupMiniGames() {
+  var identitySelect = document.getElementById('mg-identity-select');
+  var gamesBtn = document.getElementById('mg-games-btn');
+  var wheelBtn = document.getElementById('mg-wheel-btn');
+  if (!identitySelect || !gamesBtn || !wheelBtn) return;
+
+  function getCurrentIdentity() {
+    return identitySelect.value;
+  }
+
+  function getNameForIdentity(id) {
+    var data = state.battle.data;
+    if (!data) return id === 'streamer' ? 'Стример #1' : 'Стример #2';
+    return id === 'streamer' ? data.streamerName : data.opponentName;
+  }
+
+  // ===== MINI-GAMES POPUP =====
+  gamesBtn.addEventListener('click', function () {
+    showMiniGamesPopup();
+  });
+
+  function showMiniGamesPopup() {
+    var existing = document.querySelector('.mg-popup-overlay');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.className = 'mg-popup-overlay';
+    overlay.innerHTML =
+      '<div class="mg-popup">' +
+        '<div class="mg-popup-header">' +
+          '<h3>Мини-игры</h3>' +
+          '<button class="mg-popup-close">&times;</button>' +
+        '</div>' +
+        '<div class="mg-popup-tabs">' +
+          '<button class="btn btn-primary mg-tab active" data-tab="coin">Монетка</button>' +
+          '<button class="btn btn-primary mg-tab" data-tab="dice">Кубик</button>' +
+          '<button class="btn btn-primary mg-tab" data-tab="rps">КНБ</button>' +
+        '</div>' +
+        '<div class="mg-popup-body">' +
+          '<div class="mg-tab-content active" id="mg-tab-coin">' +
+            '<p style="text-align:center;color:var(--text-secondary);margin-bottom:16px;">Нажмите, чтобы бросить монетку</p>' +
+            '<button class="btn btn-primary" id="mg-do-coinflip" style="display:block;margin:0 auto;">' +
+              '<i class="fas fa-coins"></i> Бросить монетку</button>' +
+            '<div id="mg-coin-result" class="mg-coin-container" style="display:none;">' +
+              '<div class="mg-coin" id="mg-coin-inner">' +
+                '<div class="mg-coin-face front"><span class="coin-icon">🪙</span>ОРЁЛ</div>' +
+                '<div class="mg-coin-face back"><span class="coin-icon">🪙</span>РЕШКА</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="mg-tab-content" id="mg-tab-dice">' +
+            '<div style="display:flex;gap:12px;align-items:flex-end;justify-content:center;margin-bottom:12px;">' +
+              '<label style="display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--text-secondary);">' +
+                'Стороны:' +
+                '<input type="number" id="mg-dice-sides" value="6" min="2" max="1000" style="width:80px;text-align:center;font-size:18px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);border-radius:4px;padding:4px;">' +
+              '</label>' +
+              '<button class="btn btn-primary" id="mg-do-diceroll">' +
+                '<i class="fas fa-dice"></i> Бросить</button>' +
+            '</div>' +
+            '<div id="mg-dice-result" class="mg-dice-container" style="display:none;">' +
+              '<div class="mg-dice" id="mg-dice-inner">' +
+                '<div class="mg-dice-face"><span class="dice-icon">🎲</span><span class="dice-number" id="mg-dice-number">?</span></div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="mg-tab-content" id="mg-tab-rps">' +
+            '<p id="mg-rps-status" style="text-align:center;color:var(--text-secondary);margin-bottom:8px;min-height:1.4em;">Выберите фигуру</p>' +
+            '<div id="mg-rps-opponent-choice" style="text-align:center;font-size:13px;color:var(--text-muted);margin-bottom:8px;display:none;"></div>' +
+            '<div id="mg-rps-choices" style="display:flex;gap:12px;justify-content:center;">' +
+              '<button class="btn btn-primary mg-rps-btn" data-choice="камень" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 16px;min-width:80px;">' +
+                '<span style="font-size:32px;">🪨</span> Камень</button>' +
+              '<button class="btn btn-primary mg-rps-btn" data-choice="ножницы" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 16px;min-width:80px;">' +
+                '<span style="font-size:32px;">✂️</span> Ножницы</button>' +
+              '<button class="btn btn-primary mg-rps-btn" data-choice="бумага" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 16px;min-width:80px;">' +
+                '<span style="font-size:32px;">📄</span> Бумага</button>' +
+            '</div>' +
+            '<div id="mg-rps-result" style="text-align:center;margin-top:12px;font-size:20px;font-weight:800;display:none;"></div>' +
+            '<div id="mg-rps-countdown" style="text-align:center;margin-top:8px;font-size:14px;color:var(--text-muted);display:none;"></div>' +
+            '<button class="btn btn-secondary btn-small" id="mg-rps-newround" style="display:none;margin:10px auto 0;">' +
+              '<i class="fas fa-redo"></i> Новый раунд</button>' +
+            '<div id="mg-rps-history" style="margin-top:10px;max-height:150px;overflow-y:auto;border-top:1px solid var(--border);padding-top:8px;"></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('.mg-popup-close').addEventListener('click', function () { overlay.remove(); });
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
+
+    // Tabs
+    overlay.querySelectorAll('.mg-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        overlay.querySelectorAll('.mg-tab').forEach(function (t) { t.classList.remove('active'); });
+        overlay.querySelectorAll('.mg-tab-content').forEach(function (c) { c.classList.remove('active'); });
+        this.classList.add('active');
+        var content = document.getElementById('mg-tab-' + this.dataset.tab);
+        if (content) content.classList.add('active');
+      });
+    });
+
+    function logEvent(type, data) {
+      if (!state.battle.syncCode || !window.TAASync) return;
+      TAASync.addEventLog(state.battle.syncCode, {
+        type: type,
+        data: data,
+        timestamp: Date.now(),
+      });
+    }
+
+    // Coin flip with 3D animation
+    overlay.querySelector('#mg-do-coinflip').addEventListener('click', function () {
+      if (!state.battle.syncCode || !window.TAASync) return;
+      var btn = this;
+      btn.disabled = true;
+      var flipper = getNameForIdentity(getCurrentIdentity());
+      var result = Math.random() < 0.5 ? 'орёл' : 'решка';
+      TAASync.updateCoinFlip(state.battle.syncCode, { flipper: flipper, result: result });
+      logEvent('coinflip', { flipper: flipper, result: result });
+      var container = document.getElementById('mg-coin-result');
+      var inner = document.getElementById('mg-coin-inner');
+      if (container && inner) {
+        container.style.display = 'block';
+        var angle = 0;
+        var interval = setInterval(function () {
+          angle += 180;
+          inner.style.transform = 'rotateY(' + angle + 'deg)';
+        }, 100);
+        setTimeout(function () {
+          clearInterval(interval);
+          var fullSpins = Math.ceil(angle / 360);
+          var finalAngle = (result === 'орёл') ? (fullSpins * 360) : (fullSpins * 360 + 180);
+          inner.style.transform = 'rotateY(' + finalAngle + 'deg)';
+          setTimeout(function () {
+            btn.disabled = false;
+          }, 4000);
+        }, 800);
+      } else {
+        btn.disabled = false;
+      }
+    });
+
+    // Dice roll with 3D animation
+    overlay.querySelector('#mg-do-diceroll').addEventListener('click', function () {
+      if (!state.battle.syncCode || !window.TAASync) return;
+      var btn = this;
+      btn.disabled = true;
+      var sides = parseInt(document.getElementById('mg-dice-sides').value) || 6;
+      if (sides < 2) sides = 2;
+      if (sides > 1000) sides = 1000;
+      var roller = getNameForIdentity(getCurrentIdentity());
+      var result = Math.floor(Math.random() * sides) + 1;
+      TAASync.updateDiceRoll(state.battle.syncCode, { roller: roller, sides: sides, result: result });
+      logEvent('diceroll', { roller: roller, sides: sides, result: result });
+      var container = document.getElementById('mg-dice-result');
+      var inner = document.getElementById('mg-dice-inner');
+      var numEl = document.getElementById('mg-dice-number');
+      if (container && inner && numEl) {
+        container.style.display = 'block';
+        var angleX = 0, angleY = 0;
+        var interval = setInterval(function () {
+          angleX += 45;
+          angleY += 60;
+          inner.style.transform = 'rotateX(' + angleX + 'deg) rotateY(' + angleY + 'deg) scale(1.1)';
+          numEl.textContent = Math.floor(Math.random() * sides) + 1;
+        }, 80);
+        setTimeout(function () {
+          clearInterval(interval);
+          inner.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
+          numEl.textContent = result;
+          setTimeout(function () {
+            btn.disabled = false;
+          }, 4000);
+        }, 800);
+      } else {
+        btn.disabled = false;
+      }
+    });
+
+    // RPS button handlers
+    overlay.querySelectorAll('.mg-rps-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        submitRPSChoice(this.dataset.choice);
+      });
+    });
+    var newRoundBtn = overlay.querySelector('#mg-rps-newround');
+    if (newRoundBtn) {
+      newRoundBtn.addEventListener('click', function () {
+        newRPSRound();
+      });
+    }
+
+    // RPS — переработанная версия
+    var savedRPS = null; // последние данные rps из Firebase
+    var rpsResetTimeout = null; // таймаут автосброса после результата
+    var rpsCountdownInterval = null; // интервал обратного отсчёта
+
+    // Подписка на RPS живёт постоянно
+    function subscribeRPS() {
+      if (state.battle._rpsUnsub) state.battle._rpsUnsub();
+      if (!state.battle.syncCode || !window.TAASync) return;
+      state.battle._rpsUnsub = TAASync.joinRoom(state.battle.syncCode, function (data) {
+        if (!data) return;
+        savedRPS = data.rps || null;
+        renderRPSTab(data);
+      });
+    }
+
+    // Эмодзи для фигур
+    var RPS_EMOJIS = { камень: '🪨', ножницы: '✂️', бумага: '📄' };
+
+    function renderRPSTab(data) {
+      var tab = document.getElementById('mg-tab-rps');
+      if (!tab || !tab.classList.contains('active')) return;
+
+      var rps = data.rps || {};
+      var config = data.roomConfig || {};
+      var sName = config.streamerName || 'Стример #1';
+      var oName = config.opponentName || 'Стример #2';
+      var identity = getCurrentIdentity();
+      var myField = identity === 'streamer' ? 'streamerChoice' : 'opponentChoice';
+      var oppField = identity === 'streamer' ? 'opponentChoice' : 'streamerChoice';
+      var myName = identity === 'streamer' ? sName : oName;
+      var oppName = identity === 'streamer' ? oName : sName;
+      var myChoice = rps[myField] || null;
+      var oppChoice = rps[oppField] || null;
+      var result = rps.result || null;
+
+      var statusEl = document.getElementById('mg-rps-status');
+      var choicesRow = document.getElementById('mg-rps-choices');
+      var resultEl = document.getElementById('mg-rps-result');
+      var newRoundEl = document.getElementById('mg-rps-newround');
+      var historyEl = document.getElementById('mg-rps-history');
+
+      if (!statusEl || !choicesRow) return;
+
+      // Очищаем предыдущий таймер обратного отсчёта
+      if (rpsCountdownInterval) {
+        clearInterval(rpsCountdownInterval);
+        rpsCountdownInterval = null;
+      }
+      var countdownEl = document.getElementById('mg-rps-countdown');
+      if (countdownEl) {
+        countdownEl.style.display = 'none';
+        countdownEl.textContent = '';
+      }
+
+      // Статус
+      if (result) {
+        if (result === identity) statusEl.innerHTML = '<strong style="color:var(--accent);font-size:16px;">🏆 Победа!</strong>';
+        else if (result === 'draw') statusEl.innerHTML = '<strong style="font-size:16px;">🤝 Ничья!</strong>';
+        else statusEl.innerHTML = '<strong style="color:var(--color-opponent);font-size:16px;">💔 Поражение...</strong>';
+      } else if (myChoice && oppChoice) {
+        statusEl.textContent = 'Оба выбрали. Определяем победителя...';
+      } else if (myChoice) {
+        statusEl.textContent = 'Вы выбрали ' + myChoice + '. Ожидание ' + oppName + '...';
+      } else if (oppChoice) {
+        statusEl.innerHTML = oppName + ' уже выбрал фигуру. <strong>Ваш ход!</strong>';
+      } else {
+        statusEl.textContent = 'Выберите фигуру';
+      }
+
+      // Кнопки выбора
+      var btns = choicesRow.querySelectorAll('.mg-rps-btn');
+      btns.forEach(function (btn) {
+        var choice = btn.dataset.choice;
+        btn.disabled = !!myChoice || !!result;
+        btn.classList.toggle('active', choice === myChoice);
+        btn.style.opacity = (myChoice && choice !== myChoice) ? '0.4' : '1';
+      });
+
+      // Отображение выбора оппонента: секретно до окончания раунда
+      var oppDisplay = document.getElementById('mg-rps-opponent-choice');
+      if (oppDisplay) {
+        if (result) {
+          // После раунда показываем фигуру оппонента
+          oppDisplay.textContent = oppName + ': ' + RPS_EMOJIS[oppChoice] + ' ' + oppChoice;
+          oppDisplay.style.display = 'block';
+        } else {
+          // Во время раунда показываем только "?"
+          oppDisplay.textContent = oppName + ': ?';
+          oppDisplay.style.display = 'block';
+        }
+      }
+
+      // Результат + Новый раунд
+      if (resultEl) {
+        if (result) {
+          var resultText = '';
+          if (result === identity) resultText = '🏆 Победил ' + myName + '!';
+          else if (result === 'draw') resultText = '🤝 Ничья!';
+          else resultText = '💔 Победил ' + oppName + '!';
+          resultEl.textContent = resultText;
+          resultEl.style.display = 'block';
+
+          // Автоматически сбрасываем состояние через 5 секунд после показа результата + обратный отсчёт
+          if (rpsResetTimeout) clearTimeout(rpsResetTimeout);
+          if (rpsCountdownInterval) clearInterval(rpsCountdownInterval);
+          var secondsLeft = 5;
+          if (countdownEl) {
+            countdownEl.style.display = 'block';
+            countdownEl.textContent = 'Новый раунд через ' + secondsLeft + '...';
+          }
+          rpsCountdownInterval = setInterval(function () {
+            secondsLeft--;
+            if (countdownEl) {
+              if (secondsLeft > 0) {
+                countdownEl.textContent = 'Новый раунд через ' + secondsLeft + '...';
+              } else {
+                countdownEl.textContent = '';
+                countdownEl.style.display = 'none';
+              }
+            }
+            if (secondsLeft <= 0) {
+              clearInterval(rpsCountdownInterval);
+              rpsCountdownInterval = null;
+            }
+          }, 1000);
+          rpsResetTimeout = setTimeout(function () {
+            if (window.TAASync && state.battle.syncCode) {
+              TAASync.resetRPS(state.battle.syncCode);
+              savedRPS = null;
+            }
+          }, 5000);
+        } else {
+          resultEl.textContent = '';
+          resultEl.style.display = 'none';
+        }
+      }
+
+      if (newRoundEl) {
+        newRoundEl.style.display = result ? 'block' : 'none';
+      }
+
+      // История
+      if (historyEl) {
+        var history = rps.history || [];
+        if (history.length > 0) {
+          var sWins = history.filter(function (e) { return e.winner === 'streamer'; }).length;
+          var oWins = history.filter(function (e) { return e.winner === 'opponent'; }).length;
+          var draws = history.filter(function (e) { return e.winner === 'draw'; }).length;
+          historyEl.innerHTML =
+            '<div style="display:flex;gap:16px;font-size:13px;font-weight:700;margin-bottom:8px;padding:6px 10px;background:var(--bg-card);border-radius:6px;">' +
+              '<span style="color:var(--accent);">' + escapeHtml(sName) + ': ' + sWins + '</span>' +
+              '<span style="color:var(--text-muted);">Ничьи: ' + draws + '</span>' +
+              '<span style="color:var(--color-opponent);">' + escapeHtml(oName) + ': ' + oWins + '</span>' +
+            '</div>' +
+            history.slice(-10).reverse().map(function (entry) {
+              var w = '';
+              if (entry.winner === 'streamer') w = sName + ' победил';
+              else if (entry.winner === 'opponent') w = oName + ' победил';
+              else w = 'Ничья';
+              var timeStr = entry.timestamp ? formatLocalTime(entry.timestamp) : '';
+              return '<div style="font-size:13px;color:var(--text-secondary);padding:3px 8px;border-left:2px solid ' +
+                (entry.winner === 'streamer' ? 'var(--accent)' : entry.winner === 'opponent' ? 'var(--color-opponent)' : 'var(--text-muted)') + ';">' +
+                '<span style="color:var(--text-muted);font-size:11px;">' + escapeHtml(timeStr) + '</span> — ' +
+                escapeHtml(sName) + ' ' + RPS_EMOJIS[entry.streamer] + ' vs ' + RPS_EMOJIS[entry.opponent] + ' ' + escapeHtml(oName) +
+                ' — <strong>' + w + '</strong>' +
+              '</div>';
+            }).join('');
+        } else {
+          historyEl.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:8px 0;">Пока нет сыгранных раундов</div>';
+        }
+      }
+    }
+
+    // Запускаем подписку при открытии
+    subscribeRPS();
+  }
+
+  function submitRPSChoice(choice) {
+    if (!state.battle.syncCode || !window.TAASync) return;
+    var field = getCurrentIdentity() === 'streamer' ? 'streamerChoice' : 'opponentChoice';
+    TAASync.updateRPSChoice(state.battle.syncCode, field, choice);
+  }
+
+  function newRPSRound() {
+    if (!state.battle.syncCode || !window.TAASync) return;
+    TAASync.resetRPS(state.battle.syncCode);
+    savedRPS = null;
+  }
+
+  // ===== WHEEL MODAL =====
+  wheelBtn.addEventListener('click', function () {
+    showWheelModal();
+  });
+
+  function showWheelModal() {
+    if (!state.battle.data || !state.battle.syncCode) {
+      alert('Загрузите список игр');
+      return;
+    }
+    var allGames = [];
+    ['neutral', 'streamer', 'opponent'].forEach(function (key) {
+      (state.battle.data.games[key] || []).forEach(function (g) { allGames.push(g); });
+    });
+    if (allGames.length === 0) { alert('Нет игр для колеса'); return; }
+    if (!window.TAASync) return;
+
+    var result = TAASync.pickWheelResult(allGames);
+    var roller = getNameForIdentity(getCurrentIdentity());
+
+    var existing = document.querySelector('.wheel-modal-overlay');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.className = 'wheel-modal-overlay';
+    overlay.innerHTML =
+      '<div class="wheel-modal">' +
+        '<div class="wheel-modal-header">' +
+          '<h3>Колесо случайной игры</h3>' +
+          '<button class="mg-popup-close">&times;</button>' +
+        '</div>' +
+        '<div class="wheel-modal-body">' +
+          '<div class="wheel-slot-machine" id="wheel-slot">' +
+            '<div class="wheel-strip" id="wheel-strip"></div>' +
+          '</div>' +
+          '<div class="wheel-result-display" id="wheel-result-display" style="display:none;">' +
+            escapeHtml(result) +
+          '</div>' +
+        '</div>' +
+        '<div class="wheel-modal-footer" id="wheel-footer" style="display:none;">' +
+          'Крутил: ' + escapeHtml(roller) +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('.mg-popup-close').addEventListener('click', function () { overlay.remove(); });
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
+
+    // Populate strip
+    var strip = document.getElementById('wheel-strip');
+    if (strip) {
+      allGames.concat(allGames).concat(allGames).forEach(function (g) {
+        var div = document.createElement('div');
+        div.className = 'wheel-strip-item';
+        div.textContent = g;
+        strip.appendChild(div);
+      });
+    }
+
+    // Submit spinning to Firebase
+    TAASync.updateWheel(state.battle.syncCode, { games: allGames, roller: roller, result: null });
+
+    // Animate
+    var itemHeight = 60;
+    var targetIndex = allGames.indexOf(result);
+    if (targetIndex === -1) targetIndex = 0;
+    var targetOffset = (allGames.length + targetIndex) * itemHeight;
+
+    strip.style.transition = 'none';
+    strip.style.transform = 'translateY(0)';
+    // Force reflow
+    strip.offsetHeight;
+    strip.style.transition = 'transform 2.5s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+    strip.style.transform = 'translateY(-' + targetOffset + 'px)';
+
+    setTimeout(function () {
+      document.getElementById('wheel-slot').style.display = 'none';
+      document.getElementById('wheel-result-display').style.display = 'block';
+      document.getElementById('wheel-footer').style.display = 'block';
+
+      TAASync.updateWheel(state.battle.syncCode, { games: allGames, roller: roller, result: result });
+      logEvent('wheel', { roller: roller, result: result });
+    }, 2700);
+  }
+
+  // ===== LOG MODAL =====
+  var logBtn = document.getElementById('mg-log-btn');
+  if (logBtn) {
+    logBtn.addEventListener('click', function () {
+      showLogModal();
+    });
+  }
+
+  var logUnsub = null;
+
+  function showLogModal() {
+    var existing = document.querySelector('.log-modal-overlay');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.className = 'log-modal-overlay';
+    overlay.innerHTML =
+      '<div class="log-modal">' +
+        '<div class="log-modal-header">' +
+          '<h3>Лог действий</h3>' +
+          '<button class="mg-popup-close">&times;</button>' +
+        '</div>' +
+        '<div class="log-modal-body" id="log-modal-body">' +
+          '<div style="text-align:center;color:var(--text-muted);padding:40px 0;">Загрузка...</div>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    var closeBtn = overlay.querySelector('.mg-popup-close');
+    closeBtn.addEventListener('click', function () { overlay.remove(); if (logUnsub) logUnsub(); logUnsub = null; });
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) { overlay.remove(); if (logUnsub) logUnsub(); logUnsub = null; } });
+
+    // Subscribe to eventLog
+    if (state.battle.syncCode) {
+      logUnsub = TAASync.joinRoom(state.battle.syncCode, function (data) {
+        if (!data || !data.roomConfig) return;
+        renderLog(data);
+      });
+    }
+  }
+
+  function renderLog(data) {
+    var body = document.getElementById('log-modal-body');
+    if (!body) return;
+    var events = data.eventLog || [];
+    var config = data.roomConfig || {};
+    var sName = config.streamerName || 'Стример #1';
+    var oName = config.opponentName || 'Стример #2';
+
+    if (events.length === 0) {
+      body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px 0;">Пока нет действий</div>';
+      return;
+    }
+
+    var html = '<div class="log-list">';
+    // Show newest first
+    var sorted = events.slice().reverse();
+    sorted.forEach(function (entry) {
+      var timeStr = entry.timestamp ? formatLocalTime(entry.timestamp) : formatLocalTime();
+      var icon = '';
+      var text = '';
+      var cls = '';
+
+      switch (entry.type) {
+        case 'coinflip':
+          icon = '🪙';
+          text = escapeHtml(entry.data.flipper) + ' бросил монетку — <strong>' + entry.data.result.toUpperCase() + '</strong>';
+          break;
+        case 'diceroll':
+          icon = '🎲';
+          text = escapeHtml(entry.data.roller) + ' бросил d' + entry.data.sides + ' — <strong>' + entry.data.result + '</strong>';
+          break;
+        case 'rps':
+          icon = '✂️';
+          var winnerText = '';
+          if (entry.data.winner === 'streamer') winnerText = 'Победил ' + escapeHtml(entry.data.streamerName);
+          else if (entry.data.winner === 'opponent') winnerText = 'Победил ' + escapeHtml(entry.data.opponentName);
+          else winnerText = 'Ничья';
+          text = 'КНБ: ' + escapeHtml(entry.data.streamerName) + ' (' + entry.data.streamer + ') vs ' +
+            escapeHtml(entry.data.opponentName) + ' (' + entry.data.opponent + ') — <strong>' + winnerText + '</strong>';
+          cls = entry.data.winner === 'streamer' ? 'log-streamer-win' : (entry.data.winner === 'opponent' ? 'log-opponent-win' : '');
+          break;
+        case 'wheel':
+          icon = '🎡';
+          text = escapeHtml(entry.data.roller) + ' крутил колесо — <strong>' + escapeHtml(entry.data.result) + '</strong>';
+          break;
+        default:
+          icon = '❓';
+          text = JSON.stringify(entry.data);
+      }
+
+      html += '<div class="log-entry ' + cls + '">' +
+        '<span class="log-time">' + timeStr + '</span>' +
+        '<span class="log-icon">' + icon + '</span>' +
+        '<span class="log-text">' + text + '</span>' +
+      '</div>';
+    });
+    html += '</div>';
+    body.innerHTML = html;
+  }
+
+  // ===== BAR VISIBILITY =====
+  function showMiniGamesBars() {
+    var el = document.getElementById('mg-bottom-bar');
+    if (el) { el.classList.remove('hidden'); el.classList.add('active'); }
+  }
+
+  function hideMiniGamesBars() {
+    var el = document.getElementById('mg-bottom-bar');
+    if (el) { el.classList.add('hidden'); el.classList.remove('active'); }
+  }
+
+  var _origUpdatePhase = window.updateBattlePhase;
+  window.updateBattlePhase = function () {
+    _origUpdatePhase();
+    if (state.battle.phase === 'sync' || state.battle.phase === 'overview') {
+      showMiniGamesBars();
+    } else {
+      hideMiniGamesBars();
+    }
+  };
+
+  var _origShowOverview = window.showBattleOverview;
+  window.showBattleOverview = function () {
+    _origShowOverview();
+    if (identitySelect && state.battle.data) {
+      identitySelect.options[0].text = state.battle.data.streamerName || 'Стример #1';
+      identitySelect.options[1].text = state.battle.data.opponentName || 'Стример #2';
+    }
+  };
+
+  // Показываем сразу, если уже в правильной фазе
+  if (state.battle.phase === 'sync' || state.battle.phase === 'overview') {
+    showMiniGamesBars();
+  }
+}
+
 // ===== HELPERS =====
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+// Форматирует UTC-таймстамп в локальное время с указанием часового пояса
+function formatLocalTime(timestamp) {
+  var d = timestamp ? new Date(timestamp) : new Date();
+  var pad = function (n) { return String(n).padStart(2, '0'); };
+  var h = pad(d.getHours());
+  var m = pad(d.getMinutes());
+  var s = pad(d.getSeconds());
+  var tz = -d.getTimezoneOffset();
+  var tzSign = tz >= 0 ? '+' : '-';
+  var tzH = pad(Math.floor(Math.abs(tz) / 60));
+  var tzM = pad(Math.abs(tz) % 60);
+  return h + ':' + m + ':' + s + ' UTC' + tzSign + tzH + ':' + tzM;
 }
 
 function updateDualTTLFIll() {
@@ -1133,4 +1751,5 @@ document.addEventListener('DOMContentLoaded', function () {
   checkChangelogBadge();
 
   syncPrepUI();
+  setupMiniGames();
 });
