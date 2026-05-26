@@ -681,6 +681,7 @@ function setupBattle() {
   document.getElementById('sync-refresh-btn').addEventListener('click', function () {
     if (state.battle.syncData) {
       applySyncData(state.battle.syncData);
+      if (window._taaRenderMiniLog) window._taaRenderMiniLog(state.battle.syncData);
       var icon = this.querySelector('i');
       icon.className = 'fas fa-check';
       setTimeout(function () { icon.className = 'fas fa-sync'; }, 1500);
@@ -704,6 +705,43 @@ function setupBattle() {
   document.getElementById('sync-code-input').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') handleSyncJoin();
   });
+  document.getElementById('sync-copy-code-btn').addEventListener('click', function () {
+    var code = state.battle.syncCode || document.getElementById('sync-code-big').textContent;
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(function () {
+      var icon = document.querySelector('#sync-copy-code-btn i');
+      if (icon) { icon.className = 'fas fa-check'; setTimeout(function () { icon.className = 'fas fa-copy'; }, 1500); }
+    }).catch(function () {
+      var icon = document.querySelector('#sync-copy-code-btn i');
+      if (icon) { icon.className = 'fas fa-times'; setTimeout(function () { icon.className = 'fas fa-copy'; }, 1500); }
+    });
+  });
+
+  // Copy widget URLs
+  function copyWidgetUrl(path, btn) {
+    var code = state.battle.syncCode;
+    if (!code) return;
+    var url = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + path + '?room=' + code;
+    navigator.clipboard.writeText(url).then(function () {
+      var icon = btn.querySelector('i');
+      if (icon) { icon.className = 'fas fa-check'; setTimeout(function () { icon.className = 'fas fa-copy'; }, 1500); }
+    }).catch(function () {
+      var icon = btn.querySelector('i');
+      if (icon) { icon.className = 'fas fa-times'; setTimeout(function () { icon.className = 'fas fa-copy'; }, 1500); }
+    });
+  }
+  var scoreBtn = document.getElementById('copy-score-url');
+  if (scoreBtn) {
+    scoreBtn.addEventListener('click', function () {
+      copyWidgetUrl('widget-score.html', this);
+    });
+  }
+  var timerBtn = document.getElementById('copy-timer-url');
+  if (timerBtn) {
+    timerBtn.addEventListener('click', function () {
+      copyWidgetUrl('widget-timer.html', this);
+    });
+  }
 }
 
 function loadBattleFile(file) {
@@ -742,6 +780,8 @@ function autoCreateRoom(data) {
   TAASync.createRoom(config).then(function (code) {
     state.battle.syncCode = code;
     state.battle.syncUnsub = TAASync.joinRoom(code, onSyncUpdate);
+    if (window._taaClearMiniLog) window._taaClearMiniLog();
+    if (window._taaSubscribeMiniLog) window._taaSubscribeMiniLog();
     document.getElementById('battle-upload').classList.remove('active');
     document.getElementById('sync-code-big').textContent = code;
     document.getElementById('battle-sync').classList.add('active');
@@ -772,6 +812,9 @@ function handleSyncJoin() {
     if (data) {
       hideJoinStatus();
       state.battle.syncCode = code;
+      document.getElementById('sync-code-big').textContent = code;
+      if (window._taaClearMiniLog) window._taaClearMiniLog();
+      if (window._taaSubscribeMiniLog) window._taaSubscribeMiniLog();
       if (isFirst) {
         isFirst = false;
         state.battle.data = data.roomConfig;
@@ -893,9 +936,9 @@ function showBattleOverview() {
 
   const data = state.battle.data;
   const cats = [
-    { key: 'streamer', title: data.categories[1] || 'Стример #1' },
+    { key: 'streamer', title: data.streamerName || 'Стример #1' },
     { key: 'neutral', title: data.categories[0] || 'Нейтральные' },
-    { key: 'opponent', title: data.categories[2] || 'Стример #2' },
+    { key: 'opponent', title: data.opponentName || 'Стример #2' },
   ];
 
   const isSynced = !!(state.battle.syncCode && window.TAASync);
@@ -943,6 +986,10 @@ function showBattleOverview() {
       nameSpan.className = 'game-name';
       nameSpan.textContent = name;
 
+      const orderBadge = document.createElement('span');
+      orderBadge.className = 'game-order-badge';
+      orderBadge.textContent = '';
+
       const btnO = document.createElement('button');
       btnO.className = 'game-btn game-btn-o';
       btnO.title = 'Победа ' + data.opponentName;
@@ -962,6 +1009,7 @@ function showBattleOverview() {
 
       card.appendChild(btnS);
       card.appendChild(nameSpan);
+      card.appendChild(orderBadge);
       card.appendChild(btnO);
       gamesEl.appendChild(card);
     });
@@ -1003,6 +1051,7 @@ function recalcWins() {
 
 function applySyncData(data) {
   if (!data.gameWinners) return;
+  var gameOrder = data.gameOrder || {};
   document.querySelectorAll('.overview-game').forEach(function (card) {
     var key = card.dataset.gameKey;
     if (key && data.gameWinners.hasOwnProperty(key)) {
@@ -1010,11 +1059,61 @@ function applySyncData(data) {
     } else {
       applyGameWinner(card, 'none');
     }
+    // Apply order badge
+    var badge = card.querySelector('.game-order-badge');
+    if (badge) {
+      var order = gameOrder[key];
+      if (order) {
+        badge.textContent = order;
+        badge.style.display = '';
+      } else {
+        badge.textContent = '';
+        badge.style.display = 'none';
+      }
+    }
   });
   if (window.TAASync) {
     state.battle.wins = TAASync.calculateWins(data.gameWinners);
   }
   updateScoreDisplay();
+  renderMatchHistory(data);
+}
+
+function renderMatchHistory(data) {
+  var container = document.getElementById('match-history');
+  var list = document.getElementById('match-list');
+  if (!container || !list) return;
+  var gameOrder = data.gameOrder || {};
+  var gameWinners = data.gameWinners || {};
+  var config = data.roomConfig || {};
+  var entries = [];
+  for (var key in gameOrder) {
+    var order = gameOrder[key];
+    var winner = gameWinners[key];
+    if (!winner) continue;
+    var parts = key.split(':');
+    var cat = parts[0];
+    var idx = parseInt(parts[1]);
+    var gameName = (config.games && config.games[cat] && config.games[cat][idx]) || key;
+    var winnerName = winner === 'streamer' ? (config.streamerName || 'Стример #1') : (config.opponentName || 'Стример #2');
+    entries.push({ order: order, gameName: gameName, winner: winner, winnerName: winnerName });
+  }
+  entries.sort(function (a, b) { return a.order - b.order; });
+  if (entries.length === 0) {
+    container.classList.add('hidden');
+    return;
+  }
+  container.classList.remove('hidden');
+  var html = '';
+  entries.forEach(function (e) {
+    var cls = e.winner === 'streamer' ? 'match-entry-streamer' : 'match-entry-opponent';
+    html += '<div class="match-entry ' + cls + '">' +
+      '<span class="match-order">#' + e.order + '</span>' +
+      '<span class="match-game">' + escapeHtml(e.gameName) + '</span>' +
+      '<span class="match-winner">' + escapeHtml(e.winnerName) + '</span>' +
+    '</div>';
+  });
+  list.innerHTML = html;
 }
 
 function resetBattle() {
@@ -1103,10 +1202,11 @@ function markChangelogSeen() {
 
 // ===== MINI-GAMES =====
 function setupMiniGames() {
-  var identitySelect = document.getElementById('mg-identity-select');
-  var gamesBtn = document.getElementById('mg-games-btn');
-  var wheelBtn = document.getElementById('mg-wheel-btn');
-  if (!identitySelect || !gamesBtn || !wheelBtn) return;
+   var identitySelect = document.getElementById('mg-identity-select');
+   var gamesBtn = document.getElementById('mg-games-btn');
+   var wheelBtn = document.getElementById('mg-wheel-btn');
+   var timerBtn = document.getElementById('mg-timer-btn');
+   if (!identitySelect || !gamesBtn || !wheelBtn || !timerBtn) return;
 
   function getCurrentIdentity() {
     return identitySelect.value;
@@ -1117,6 +1217,32 @@ function setupMiniGames() {
     if (!data) return id === 'streamer' ? 'Стример #1' : 'Стример #2';
     return id === 'streamer' ? data.streamerName : data.opponentName;
   }
+
+  function logEvent(type, data) {
+    if (!state.battle.syncCode || !window.TAASync) return;
+    TAASync.addEventLog(state.battle.syncCode, {
+      type: type,
+      data: data,
+      timestamp: Date.now(),
+    });
+  }
+
+  function timeAgo(ts) {
+    var diff = Math.floor((Date.now() - ts) / 1000);
+    if (diff < 30) return 'только что';
+    if (diff < 3600) return Math.floor(diff / 60) + ' мин назад';
+    if (diff < 86400) return Math.floor(diff / 3600) + ' ч назад';
+    return Math.floor(diff / 86400) + ' дн назад';
+  }
+
+  function updateLogTimes() {
+    document.querySelectorAll('.log-time[data-ts]').forEach(function (el) {
+      var ts = parseInt(el.dataset.ts);
+      if (!ts) return;
+      el.textContent = timeAgo(ts);
+    });
+  }
+  setInterval(updateLogTimes, 30000);
 
   // ===== MINI-GAMES POPUP =====
   gamesBtn.addEventListener('click', function () {
@@ -1202,15 +1328,6 @@ function setupMiniGames() {
       });
     });
 
-    function logEvent(type, data) {
-      if (!state.battle.syncCode || !window.TAASync) return;
-      TAASync.addEventLog(state.battle.syncCode, {
-        type: type,
-        data: data,
-        timestamp: Date.now(),
-      });
-    }
-
     // Coin flip with 3D animation
     overlay.querySelector('#mg-do-coinflip').addEventListener('click', function () {
       if (!state.battle.syncCode || !window.TAASync) return;
@@ -1234,9 +1351,7 @@ function setupMiniGames() {
           var fullSpins = Math.ceil(angle / 360);
           var finalAngle = (result === 'орёл') ? (fullSpins * 360) : (fullSpins * 360 + 180);
           inner.style.transform = 'rotateY(' + finalAngle + 'deg)';
-          setTimeout(function () {
-            btn.disabled = false;
-          }, 4000);
+          btn.disabled = false;
         }, 800);
       } else {
         btn.disabled = false;
@@ -1271,9 +1386,7 @@ function setupMiniGames() {
           clearInterval(interval);
           inner.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
           numEl.textContent = result;
-          setTimeout(function () {
-            btn.disabled = false;
-          }, 4000);
+          btn.disabled = false;
         }, 800);
       } else {
         btn.disabled = false;
@@ -1483,25 +1596,32 @@ function setupMiniGames() {
     savedRPS = null;
   }
 
-  // ===== WHEEL MODAL =====
-  wheelBtn.addEventListener('click', function () {
-    showWheelModal();
-  });
+   // ===== WHEEL MODAL =====
+   wheelBtn.addEventListener('click', function () {
+     showWheelModal();
+   });
+
+   // ===== TIMER MODAL =====
+   timerBtn.addEventListener('click', function () {
+     showTimerModal();
+   });
 
   function showWheelModal() {
     if (!state.battle.data || !state.battle.syncCode) {
       alert('Загрузите список игр');
       return;
     }
+    var games = state.battle.data.games || {};
     var allGames = [];
+    var categories = {
+      neutral: 'Нейтральные',
+      streamer: state.battle.data.streamerName || 'Стример #1',
+      opponent: state.battle.data.opponentName || 'Стример #2',
+    };
     ['neutral', 'streamer', 'opponent'].forEach(function (key) {
-      (state.battle.data.games[key] || []).forEach(function (g) { allGames.push(g); });
+      (games[key] || []).forEach(function (g) { allGames.push({ name: g, cat: key }); });
     });
     if (allGames.length === 0) { alert('Нет игр для колеса'); return; }
-    if (!window.TAASync) return;
-
-    var result = TAASync.pickWheelResult(allGames);
-    var roller = getNameForIdentity(getCurrentIdentity());
 
     var existing = document.querySelector('.wheel-modal-overlay');
     if (existing) existing.remove();
@@ -1514,16 +1634,153 @@ function setupMiniGames() {
           '<h3>Колесо случайной игры</h3>' +
           '<button class="mg-popup-close">&times;</button>' +
         '</div>' +
-        '<div class="wheel-modal-body">' +
-          '<div class="wheel-slot-machine" id="wheel-slot">' +
+        '<div class="wheel-modal-body" id="wheel-body">' +
+          '<div class="wheel-game-columns" id="wheel-game-list"></div>' +
+          '<button class="btn btn-primary wheel-spin-btn" id="wheel-spin-btn">' +
+            '<span class="spin-btn"><i class="fas fa-sync-alt"></i> Крутить колесо</span></button>' +
+          '<div class="wheel-slot-machine" id="wheel-slot" style="display:none; margin: 0 auto;">' +
             '<div class="wheel-strip" id="wheel-strip"></div>' +
           '</div>' +
-          '<div class="wheel-result-display" id="wheel-result-display" style="display:none;">' +
-            escapeHtml(result) +
-          '</div>' +
+          '<div class="wheel-result-display" id="wheel-result-display" style="display:none;"></div>' +
         '</div>' +
-        '<div class="wheel-modal-footer" id="wheel-footer" style="display:none;">' +
-          'Крутил: ' + escapeHtml(roller) +
+        '<div class="wheel-modal-footer" id="wheel-footer" style="display:none;"></div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('.mg-popup-close').addEventListener('click', function () { overlay.remove(); });
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
+
+    // Build game selection list — 3 columns with select-all buttons
+    // Order: streamer | neutral (center) | opponent
+    var listEl = document.getElementById('wheel-game-list');
+    var syncData = state.battle.syncData || {};
+    var gameWinners = syncData.gameWinners || {};
+    ['streamer', 'neutral', 'opponent'].forEach(function (key) {
+      var items = games[key] || [];
+      if (items.length === 0) return;
+      var col = document.createElement('div');
+      col.className = 'wheel-game-column';
+      var title = document.createElement('div');
+      title.className = 'wheel-game-group-title';
+      title.innerHTML = categories[key] +
+        '<button class="wheel-select-all" data-cat="' + key + '">все</button>';
+      col.appendChild(title);
+      items.forEach(function (g, idx) {
+        var gameKey = key + ':' + idx;
+        var isPlayed = !!gameWinners[gameKey];
+        var row = document.createElement('div');
+        row.className = 'wheel-game-item' + (isPlayed ? ' played' : '');
+        var checked = (!isPlayed && key === 'neutral') ? 'checked' : '';
+        var disabled = isPlayed ? 'disabled' : '';
+        var inputId = 'wg-' + key + '-' + idx;
+        row.innerHTML =
+          '<input type="checkbox" id="' + inputId + '" value="' + escapeHtml(g) + '" data-cat="' + key + '" ' + checked + ' ' + disabled + '>' +
+          '<label for="' + inputId + '">' + escapeHtml(g) + (isPlayed ? ' <span style="color:var(--text-muted);font-size:11px;">(сыграна)</span>' : '') + '</label>';
+        col.appendChild(row);
+      });
+      listEl.appendChild(col);
+    });
+
+    // Select-all / select-none toggle (only affects enabled checkboxes)
+    listEl.querySelectorAll('.wheel-select-all').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var cat = this.dataset.cat;
+        var cbs = Array.from(listEl.querySelectorAll('input[data-cat="' + cat + '"]:not(:disabled)'));
+        if (cbs.length === 0) return;
+        var allChecked = cbs.every(function (cb) { return cb.checked; });
+        cbs.forEach(function (cb) { cb.checked = !allChecked; });
+        this.textContent = allChecked ? 'все' : 'снять';
+      });
+    });
+
+    // Spin button
+    document.getElementById('wheel-spin-btn').addEventListener('click', function () {
+      var checked = listEl.querySelectorAll('input[type="checkbox"]:checked');
+      if (checked.length === 0) { alert('Выберите хотя бы одну игру'); return; }
+
+      var selectedGames = [];
+      checked.forEach(function (cb) { selectedGames.push(cb.value); });
+
+      var roller = getNameForIdentity(getCurrentIdentity());
+      var result = TAASync.pickWheelResult(selectedGames);
+
+      // Hide selection, show wheel
+      listEl.style.display = 'none';
+      document.getElementById('wheel-spin-btn').style.display = 'none';
+      document.getElementById('wheel-slot').style.display = 'block';
+
+      // Populate strip
+      var strip = document.getElementById('wheel-strip');
+      strip.innerHTML = '';
+      selectedGames.concat(selectedGames).concat(selectedGames).forEach(function (g) {
+        var div = document.createElement('div');
+        div.className = 'wheel-strip-item';
+        div.textContent = g;
+        strip.appendChild(div);
+      });
+
+      // Submit to Firebase
+      TAASync.updateWheel(state.battle.syncCode, { games: selectedGames, roller: roller, result: null });
+
+      // Animate
+      var itemHeight = 60;
+      var targetIndex = selectedGames.indexOf(result);
+      if (targetIndex === -1) targetIndex = 0;
+      var targetOffset = (selectedGames.length + targetIndex) * itemHeight;
+
+      strip.style.transition = 'none';
+      strip.style.transform = 'translateY(0)';
+      strip.offsetHeight;
+      strip.style.transition = 'transform 4.7s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+      strip.style.transform = 'translateY(-' + targetOffset + 'px)';
+
+      setTimeout(function () {
+        document.getElementById('wheel-slot').style.display = 'none';
+        var resEl = document.getElementById('wheel-result-display');
+        resEl.textContent = result;
+        resEl.style.display = 'block';
+        var footEl = document.getElementById('wheel-footer');
+        footEl.textContent = 'Крутил: ' + escapeHtml(roller);
+        footEl.style.display = 'block';
+
+        var sName = state.battle.data && state.battle.data.streamerName || 'Стример #1';
+        var oName = state.battle.data && state.battle.data.opponentName || 'Стример #2';
+        TAASync.updateWheel(state.battle.syncCode, { games: selectedGames, roller: roller, result: result });
+        logEvent('wheel', { roller: roller, result: result, streamerName: sName, opponentName: oName });
+      }, 5000);
+    });
+  }
+
+  // ===== TIMER MODAL =====
+  function showTimerModal() {
+    if (!state.battle.syncCode) { alert('Подключитесь к комнате'); return; }
+
+    var existing = document.querySelector('.mg-popup-overlay');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.className = 'mg-popup-overlay';
+    overlay.innerHTML =
+      '<div class="mg-popup">' +
+        '<div class="mg-popup-header">' +
+          '<h3>Таймер</h3>' +
+          '<button class="mg-popup-close">&times;</button>' +
+        '</div>' +
+        '<div class="mg-popup-body mg-timer-body">' +
+          '<div class="mg-timer-inputs">' +
+            '<label class="mg-timer-label">Минуты' +
+              '<input type="number" class="mg-timer-input" id="mg-timer-minutes" value="5" min="0" max="99">' +
+            '</label>' +
+            '<span class="mg-timer-sep">:</span>' +
+            '<label class="mg-timer-label">Секунды' +
+              '<input type="number" class="mg-timer-input" id="mg-timer-seconds" value="0" min="0" max="59">' +
+            '</label>' +
+          '</div>' +
+          '<div id="mg-timer-preview" class="mg-timer-preview">05:00</div>' +
+          '<div class="mg-timer-actions">' +
+            '<button class="btn btn-primary" id="mg-timer-start"><i class="fas fa-play"></i> Запустить</button>' +
+            '<button class="btn btn-danger" id="mg-timer-stop"><i class="fas fa-stop"></i> Стоп</button>' +
+          '</div>' +
         '</div>' +
       '</div>';
     document.body.appendChild(overlay);
@@ -1531,51 +1788,181 @@ function setupMiniGames() {
     overlay.querySelector('.mg-popup-close').addEventListener('click', function () { overlay.remove(); });
     overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.remove(); });
 
-    // Populate strip
-    var strip = document.getElementById('wheel-strip');
-    if (strip) {
-      allGames.concat(allGames).concat(allGames).forEach(function (g) {
-        var div = document.createElement('div');
-        div.className = 'wheel-strip-item';
-        div.textContent = g;
-        strip.appendChild(div);
-      });
+    var minutesInput = document.getElementById('mg-timer-minutes');
+    var secondsInput = document.getElementById('mg-timer-seconds');
+    var startBtn = document.getElementById('mg-timer-start');
+    var stopBtn = document.getElementById('mg-timer-stop');
+    var previewEl = document.getElementById('mg-timer-preview');
+
+    function updatePreview() {
+      var m = parseInt(minutesInput.value) || 0;
+      var s = parseInt(secondsInput.value) || 0;
+      previewEl.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+    minutesInput.addEventListener('input', updatePreview);
+    secondsInput.addEventListener('input', updatePreview);
+
+    // Check current timer state
+    var syncData = state.battle.syncData || {};
+    var timerInterval = null;
+    var currentTimer = null;
+
+    function clearTimerInterval() {
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      currentTimer = null;
     }
 
-    // Submit spinning to Firebase
-    TAASync.updateWheel(state.battle.syncCode, { games: allGames, roller: roller, result: null });
+    function startTimerDisplay(timer) {
+      currentTimer = timer;
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(function () {
+        if (!currentTimer) return;
+        var now = Date.now();
+        var startedAt = currentTimer.startedAt ? currentTimer.startedAt.toMillis() : now;
+        var elapsed = Math.floor((now - startedAt) / 1000);
+        var remaining = Math.max(0, currentTimer.duration - elapsed);
+        var mins = Math.floor(remaining / 60);
+        var secs = remaining % 60;
+        previewEl.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+        if (remaining === 0) {
+          clearTimerInterval();
+        }
+      }, 200);
+    }
 
-    // Animate
-    var itemHeight = 60;
-    var targetIndex = allGames.indexOf(result);
-    if (targetIndex === -1) targetIndex = 0;
-    var targetOffset = (allGames.length + targetIndex) * itemHeight;
+    function setTimerUI(timer) {
+      if (timer) {
+        startBtn.style.display = 'none';
+        stopBtn.style.display = '';
+        startTimerDisplay(timer);
+      } else {
+        clearTimerInterval();
+        startBtn.style.display = '';
+        stopBtn.style.display = 'none';
+        updatePreview();
+      }
+    }
 
-    strip.style.transition = 'none';
-    strip.style.transform = 'translateY(0)';
-    // Force reflow
-    strip.offsetHeight;
-    strip.style.transition = 'transform 2.5s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
-    strip.style.transform = 'translateY(-' + targetOffset + 'px)';
+    if (syncData.timer) {
+      setTimerUI(syncData.timer);
+    } else {
+      setTimerUI(null);
+    }
 
-    setTimeout(function () {
-      document.getElementById('wheel-slot').style.display = 'none';
-      document.getElementById('wheel-result-display').style.display = 'block';
-      document.getElementById('wheel-footer').style.display = 'block';
+    // Subscribe to timer changes while modal is open
+    var timerUnsub = TAASync.joinRoom(state.battle.syncCode, function (data) {
+      if (!data) return;
+      setTimerUI(data.timer || null);
+    });
 
-      TAASync.updateWheel(state.battle.syncCode, { games: allGames, roller: roller, result: result });
-      logEvent('wheel', { roller: roller, result: result });
-    }, 2700);
+    startBtn.addEventListener('click', function () {
+      var m = parseInt(minutesInput.value) || 0;
+      var s = parseInt(secondsInput.value) || 0;
+      var total = m * 60 + s;
+      if (total < 1) { alert('Введите время больше 0'); return; }
+      if (total > 3600) { alert('Максимум 60 минут'); return; }
+
+      TAASync.updateTimer(state.battle.syncCode, { duration: total });
+      logEvent('timer_start', { starter: getNameForIdentity(getCurrentIdentity()), minutes: m, seconds: s, duration: total });
+    });
+
+    stopBtn.addEventListener('click', function () {
+      TAASync.updateTimer(state.battle.syncCode, null);
+      logEvent('timer_stop', { stopper: getNameForIdentity(getCurrentIdentity()) });
+    });
+
+    // Cleanup subscription on close
+    overlay.addEventListener('remove', function () {
+      if (timerUnsub) { timerUnsub(); timerUnsub = null; }
+    });
+    var origRemove = overlay.remove.bind(overlay);
+    overlay.remove = function () {
+      clearTimerInterval();
+      if (timerUnsub) timerUnsub();
+      origRemove();
+    };
   }
 
-  // ===== LOG MODAL =====
-  var logBtn = document.getElementById('mg-log-btn');
-  if (logBtn) {
-    logBtn.addEventListener('click', function () {
+  // ===== MINI LOG =====
+  var miniLogEl = document.getElementById('mg-mini-log');
+  if (miniLogEl) {
+    miniLogEl.addEventListener('click', function () {
       showLogModal();
     });
   }
 
+  function renderMiniLog(data) {
+    if (!miniLogEl) return;
+    var events = data.eventLog || [];
+    if (events.length === 0) {
+      miniLogEl.innerHTML = '<div class="mg-mini-log-empty">Нет событий</div>';
+      return;
+    }
+    var lastEvents = events.slice(-5).reverse();
+    var html = '';
+    lastEvents.forEach(function (entry) {
+      var icon = '';
+      var text = '';
+      switch (entry.type) {
+        case 'coinflip':
+          icon = '🪙';
+          text = (entry.data.flipper || '???') + ' — ' + (entry.data.result || '?').toUpperCase();
+          break;
+        case 'diceroll':
+          icon = '🎲';
+          text = (entry.data.roller || '???') + ' — ' + (entry.data.result || '?') + ' (d' + (entry.data.sides || '?') + ')';
+          break;
+        case 'rps':
+          icon = '✂️';
+          var w = entry.data.winner;
+          if (w === 'streamer') text = 'Победил ' + (entry.data.streamerName || 'Стример #1');
+          else if (w === 'opponent') text = 'Победил ' + (entry.data.opponentName || 'Стример #2');
+          else text = 'Ничья';
+          break;
+        case 'wheel':
+          icon = '🎡';
+          text = (entry.data.roller || '???') + ' — ' + (entry.data.result || '?');
+          break;
+        case 'timer_start':
+          icon = '⏱️';
+          text = (entry.data.starter || '???') + ' запустил таймер на ' + entry.data.minutes + ':' + String(entry.data.seconds).padStart(2, '0');
+          break;
+        case 'timer_stop':
+          icon = '⏹️';
+          text = (entry.data.stopper || '???') + ' остановил таймер';
+          break;
+        case 'match_played':
+          icon = '🎮';
+          text = '#' + entry.data.order + ' ' + (entry.data.gameName || '???') + ' — победил ' + (entry.data.winner === 'streamer' ? (entry.data.streamerName || 'Стример #1') : (entry.data.opponentName || 'Стример #2'));
+          break;
+        default:
+          icon = '❓';
+          text = JSON.stringify(entry.data).substring(0, 40);
+      }
+      var ts = entry.timestamp || Date.now();
+      var fullTime = formatLocalTime(ts);
+      var ago = timeAgo(ts);
+      html += '<div class="mg-mini-log-entry" title="' + escapeHtml(fullTime) + '"><span class="log-time" data-ts="' + ts + '">' + ago + '</span> <span class="log-icon">' + icon + '</span><span class="log-text">' + escapeHtml(text) + '</span></div>';
+    });
+    if (events.length > 5) {
+      html += '<div class="mg-mini-log-more">+ ещё ' + (events.length - 5) + ' событий...</div>';
+    }
+    miniLogEl.innerHTML = html;
+    updateLogTimes();
+  }
+
+  // Subscribe to eventLog updates for mini log
+  var miniLogUnsub = null;
+  function subscribeMiniLog() {
+    if (miniLogUnsub) miniLogUnsub();
+    if (!state.battle.syncCode || !window.TAASync) return;
+    miniLogUnsub = TAASync.joinRoom(state.battle.syncCode, function (data) {
+      if (!data || !data.roomConfig) return;
+      renderMiniLog(data);
+    });
+  }
+
+  // ===== LOG MODAL =====
   var logUnsub = null;
 
   function showLogModal() {
@@ -1605,6 +1992,7 @@ function setupMiniGames() {
       logUnsub = TAASync.joinRoom(state.battle.syncCode, function (data) {
         if (!data || !data.roomConfig) return;
         renderLog(data);
+        updateLogTimes();
       });
     }
   }
@@ -1626,7 +2014,9 @@ function setupMiniGames() {
     // Show newest first
     var sorted = events.slice().reverse();
     sorted.forEach(function (entry) {
-      var timeStr = entry.timestamp ? formatLocalTime(entry.timestamp) : formatLocalTime();
+      var ts = entry.timestamp || Date.now();
+      var ago = timeAgo(ts);
+      var fullTime = formatLocalTime(ts);
       var icon = '';
       var text = '';
       var cls = '';
@@ -1652,7 +2042,21 @@ function setupMiniGames() {
           break;
         case 'wheel':
           icon = '🎡';
-          text = escapeHtml(entry.data.roller) + ' крутил колесо — <strong>' + escapeHtml(entry.data.result) + '</strong>';
+          var wheelRoller = entry.data.roller || 'Unknown';
+          text = escapeHtml(wheelRoller) + ' крутил колесо — <strong>' + escapeHtml(entry.data.result) + '</strong>';
+          break;
+        case 'timer_start':
+          icon = '⏱️';
+          text = escapeHtml(entry.data.starter || '???') + ' запустил таймер на <strong>' + entry.data.minutes + ':' + String(entry.data.seconds).padStart(2, '0') + '</strong>';
+          break;
+        case 'timer_stop':
+          icon = '⏹️';
+          text = escapeHtml(entry.data.stopper || '???') + ' остановил таймер';
+          break;
+        case 'match_played':
+          icon = '🎮';
+          text = '<strong>#' + entry.data.order + '</strong> ' + escapeHtml(entry.data.gameName || '???') + ' — победил ' + (entry.data.winner === 'streamer' ? escapeHtml(entry.data.streamerName || 'Стример #1') : escapeHtml(entry.data.opponentName || 'Стример #2'));
+          cls = entry.data.winner === 'streamer' ? 'log-streamer-win' : (entry.data.winner === 'opponent' ? 'log-opponent-win' : '');
           break;
         default:
           icon = '❓';
@@ -1660,7 +2064,7 @@ function setupMiniGames() {
       }
 
       html += '<div class="log-entry ' + cls + '">' +
-        '<span class="log-time">' + timeStr + '</span>' +
+        '<span class="log-time" data-ts="' + ts + '" title="' + escapeHtml(fullTime) + '">' + ago + '</span>' +
         '<span class="log-icon">' + icon + '</span>' +
         '<span class="log-text">' + text + '</span>' +
       '</div>';
@@ -1673,6 +2077,7 @@ function setupMiniGames() {
   function showMiniGamesBars() {
     var el = document.getElementById('mg-bottom-bar');
     if (el) { el.classList.remove('hidden'); el.classList.add('active'); }
+    subscribeMiniLog();
   }
 
   function hideMiniGamesBars() {
@@ -1697,6 +2102,14 @@ function setupMiniGames() {
       identitySelect.options[0].text = state.battle.data.streamerName || 'Стример #1';
       identitySelect.options[1].text = state.battle.data.opponentName || 'Стример #2';
     }
+  };
+
+  // Export for global access
+  window._taaSubscribeMiniLog = subscribeMiniLog;
+  window._taaRenderMiniLog = renderMiniLog;
+  window._taaClearMiniLog = function () {
+    if (miniLogUnsub) { miniLogUnsub(); miniLogUnsub = null; }
+    if (miniLogEl) { miniLogEl.innerHTML = '<div class="mg-mini-log-empty">Нет событий</div>'; }
   };
 
   // Показываем сразу, если уже в правильной фазе

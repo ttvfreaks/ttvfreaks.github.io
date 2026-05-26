@@ -3,7 +3,7 @@
 
   var params = new URLSearchParams(window.location.search);
   var ROOM = params.get('room');
-  if (!ROOM) return;
+  if (!ROOM) { console.warn('[Timer] No room code'); return; }
 
   var firebaseConfig = {
     apiKey: "AIzaSyAwQQcO3nVXK9b6sAdj2lLfY7Uiuyby0nM",
@@ -13,23 +13,51 @@
     messagingSenderId: "642385345711",
     appId: "1:642385345711:web:60a80d1f1a2113adeca85a"
   };
-  firebase.initializeApp(firebaseConfig, 'timer');
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
   var db = firebase.firestore();
 
   var interval = null;
   var currentTimer = null;
+  var prevVersion = -1;
+  var display = document.getElementById('timer-display');
+  if (!display) { console.warn('[Timer] No display element'); return; }
+
+  var TIMER_VOLUME = 0.05;
 
   db.collection('taa-rooms').doc(ROOM).onSnapshot(function (snap) {
     if (!snap.exists) return;
     var data = snap.data();
-    var timer = data.timer;
+    var ver = data.timerVersion || 0;
+    if (ver === prevVersion) return;
+    prevVersion = ver;
+
+    var timer = data.timer || null;
     if (!timer) {
       if (interval) { clearInterval(interval); interval = null; }
-      document.getElementById('timer-display').textContent = '';
+      currentTimer = null;
+      display.textContent = '';
+      display.classList.remove('zero');
+      return;
+    }
+    // If already expired, show once and auto-clear
+    var startedAt = timer.startedAt ? timer.startedAt.toMillis() : Date.now();
+    var elapsed = Math.floor((Date.now() - startedAt) / 1000);
+    var remaining = timer.duration - elapsed;
+    if (remaining <= 0) {
+      display.textContent = '00:00';
+      display.classList.add('zero');
+      if (interval) { clearInterval(interval); interval = null; }
+      currentTimer = null;
+      playSound();
+      setTimeout(function () { display.textContent = ''; }, 10000);
       return;
     }
     currentTimer = timer;
     startCountdown();
+  }, function (err) {
+    console.error('[Timer] onSnapshot error:', err);
   });
 
   function startCountdown() {
@@ -54,6 +82,7 @@
       playSound();
       clearInterval(interval);
       interval = null;
+      currentTimer = null;
       setTimeout(function () { display.textContent = ''; }, 10000);
     } else {
       display.classList.remove('zero');
@@ -69,7 +98,7 @@
       gain.connect(ctx.destination);
       osc.frequency.value = 880;
       osc.type = 'sine';
-      gain.gain.setValueAtTime(0.5, ctx.currentTime);
+      gain.gain.setValueAtTime(TIMER_VOLUME, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.5);

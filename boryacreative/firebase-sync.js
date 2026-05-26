@@ -28,6 +28,7 @@
       return db.collection('taa-rooms').doc(code).set({
         roomConfig: config,
         gameWinners: {},
+        gameOrder: {},
         wins: { streamer: 0, opponent: 0 },
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       }).then(function () {
@@ -45,6 +46,7 @@
         onUpdate({
           roomConfig: data.roomConfig,
           gameWinners: data.gameWinners || {},
+          gameOrder: data.gameOrder || {},
           wins: data.wins || { streamer: 0, opponent: 0 },
           eventLog: data.eventLog || [],
           coinFlip: data.coinFlip || null,
@@ -57,13 +59,63 @@
     },
 
     updateGameWinner: function (code, gameKey, winner) {
-      var update = {};
-      if (winner === 'none') {
-        update['gameWinners.' + gameKey] = firebase.firestore.FieldValue.delete();
-      } else {
-        update['gameWinners.' + gameKey] = winner;
-      }
-      return db.collection('taa-rooms').doc(code).update(update);
+      var docRef = db.collection('taa-rooms').doc(code);
+      return db.runTransaction(function (tx) {
+        return tx.get(docRef).then(function (doc) {
+          if (!doc.exists) return;
+          var data = doc.data();
+          var gameWinners = Object.assign({}, data.gameWinners || {});
+          var gameOrder = Object.assign({}, data.gameOrder || {});
+          var eventLog = (data.eventLog || []).slice();
+          var config = data.roomConfig || {};
+          var prevWinner = gameWinners[gameKey];
+
+          // Get game name from config
+          var parts = gameKey.split(':');
+          var cat = parts[0];
+          var idx = parseInt(parts[1]);
+          var gameName = (config.games && config.games[cat] && config.games[cat][idx]) || gameKey;
+
+          if (winner === 'none') {
+            delete gameWinners[gameKey];
+            delete gameOrder[gameKey];
+          } else {
+            gameWinners[gameKey] = winner;
+            if (!gameOrder.hasOwnProperty(gameKey)) {
+              var maxOrder = 0;
+              for (var k in gameOrder) {
+                if (gameOrder[k] > maxOrder) maxOrder = gameOrder[k];
+              }
+              gameOrder[gameKey] = maxOrder + 1;
+              eventLog.push({
+                type: 'match_played',
+                data: {
+                  gameKey: gameKey,
+                  gameName: gameName,
+                  winner: winner,
+                  order: maxOrder + 1,
+                  streamerName: config.streamerName || 'Стример #1',
+                  opponentName: config.opponentName || 'Стример #2',
+                },
+                timestamp: firebase.firestore.Timestamp.now().toMillis(),
+              });
+            }
+          }
+
+          var wins = { streamer: 0, opponent: 0 };
+          for (var key in gameWinners) {
+            if (gameWinners[key] === 'streamer') wins.streamer++;
+            else if (gameWinners[key] === 'opponent') wins.opponent++;
+          }
+
+          tx.update(docRef, {
+            gameWinners: gameWinners,
+            wins: wins,
+            gameOrder: gameOrder,
+            eventLog: eventLog,
+          });
+        });
+      });
     },
 
     calculateWins: function (gameWinners) {
@@ -160,7 +212,20 @@
     },
 
     updateTimer: function (code, data) {
-      return db.collection('taa-rooms').doc(code).update({ timer: data });
+      var docRef = db.collection('taa-rooms').doc(code);
+      if (data === null) {
+        return docRef.update({
+          timer: firebase.firestore.FieldValue.delete(),
+          timerVersion: firebase.firestore.FieldValue.increment(1),
+        });
+      }
+      return docRef.set({
+        timer: {
+          startedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          duration: data.duration || 0,
+        },
+        timerVersion: firebase.firestore.FieldValue.increment(1),
+      }, { merge: true });
     },
 
     updateWheel: function (code, data) {

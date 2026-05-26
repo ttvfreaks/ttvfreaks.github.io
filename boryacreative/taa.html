@@ -32,7 +32,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="styles.css?nocache=anim4">
+  <link rel="stylesheet" href="styles.css?nocache=wheel16">
   <link rel="icon"
     href="https://static-cdn.jtvnw.net/jtv_user_pictures/c50c86c1-38b8-4686-add6-dbd66606d729-profile_image-70x70.png">
 </head>
@@ -58,6 +58,9 @@
     <button class="nav-btn" data-mode="faq" title="FAQ">
       <i class="fas fa-question"></i>
       <span class="nav-badge" id="faq-badge"></span>
+    </button>
+    <button class="nav-btn" data-mode="guide" title="Памятка">
+      <i class="fas fa-book"></i>
     </button>
   </nav>
   <div id="emote-toast" class="emote-toast"></div>
@@ -145,6 +148,9 @@
 
     <div id="battle-overview" class="battle-phase hidden">
       <div id="mg-bottom-bar" class="mg-bottom-bar">
+        <div id="mg-mini-log" class="mg-mini-log" title="Нажмите, чтобы развернуть лог">
+          <div class="mg-mini-log-empty">Нет событий</div>
+        </div>
         <div id="mini-games-bar" class="mini-games-bar">
           <div id="mg-identity-bar">
             <span style="font-size:13px;font-weight:600;color:var(--text-secondary);">Вы:</span>
@@ -155,16 +161,30 @@
           </div>
 
           <button class="btn btn-primary btn-small" id="mg-games-btn"><i class="fas fa-dice"></i> Мини-игры</button>
-          <button class="btn btn-primary btn-small" id="mg-wheel-btn"><i class="fas fa-sync-alt"></i> Колесо</button>
-          <button class="btn btn-secondary btn-small" id="mg-log-btn"><i class="fas fa-list"></i> Лог</button>
+          <button class="btn btn-primary btn-small" id="mg-wheel-btn"><i class="fas fa-sync-alt"></i> Колесо
+            игр</button>
+          <button class="btn btn-primary btn-small" id="mg-timer-btn"><i class="fas fa-hourglass-half"></i>
+            Таймер</button>
         </div>
       </div>
       <button class="btn btn-secondary battle-reset-btn" id="battle-reset-overview">
         <i class="fas fa-undo"></i> Заново
       </button>
-      <button class="btn btn-secondary battle-sync-btn" id="sync-refresh-btn" title="Синхронизировать">
-        <i class="fas fa-sync"></i> Синхронизировать
-      </button>
+      <div class="sync-widget-urls">
+        <p>Виджеты для OBS:</p>
+        <div class="sync-widget-row obswidget">
+          <button class="btn btn-small btn-secondary" id="copy-score-url"><i class="fas fa-copy"></i> Счёт</button>
+          <button class="btn btn-small btn-secondary" id="copy-timer-url"><i class="fas fa-copy"></i> Таймер</button>
+        </div>
+        <div class="sync-actions-row">
+          <button class="btn btn-secondary battle-sync-btn" id="sync-refresh-btn" title="Синхронизировать">
+            <i class="fas fa-sync"></i> Синхронизировать
+          </button>
+          <button class="btn btn-secondary" id="sync-copy-code-btn" title="Скопировать код комнаты">
+            <i class="fas fa-copy"></i> Код
+          </button>
+        </div>
+      </div>
       <div class="overview-grid">
         <div class="overview-col" data-cat="streamer">
           <h2 class="overview-col-title first-streamer"></h2>
@@ -189,6 +209,10 @@
           <span class="score-name" id="score-o-name"></span>
           <span class="score-num" id="score-o-num">0</span>
         </div>
+      </div>
+      <div id="match-history" class="match-history hidden">
+        <div class="match-history-title">Порядок матчей</div>
+        <div class="match-list" id="match-list"></div>
       </div>
     </div>
   </section>
@@ -254,6 +278,13 @@
             <button class="btn btn-small btn-icon" id="set-bg-image-clear" title="Удалить">&times;</button>
           </div>
           <input type="file" id="set-bg-image-input" accept="image/*" hidden>
+        </div>
+        <div class="setting-row setting-widgets">
+          <label>Виджеты для OBS (Browser Source)</label>
+          <div class="setting-widget-row">
+            <button class="btn btn-small btn-secondary" id="copy-score-url"><i class="fas fa-copy"></i> Счёт</button>
+            <button class="btn btn-small btn-secondary" id="copy-timer-url"><i class="fas fa-copy"></i> Таймер</button>
+          </div>
         </div>
       </div>
 
@@ -389,7 +420,6 @@
             <li><strong>Основные</strong> — шрифт (семейство и размеры), цвет фона, фоновое изображение, размер
               заголовков и игр в списках, текст боевого режима.</li>
             <li><strong>Дополнительные</strong> — цвет текста, акцентный цвет, затемнение фона, скругление углов.</li>
-            <!-- <li><strong>Кастомный CSS</strong> — для тонкой настройки стиля (скрыт, но доступен при необходимости).</li> -->
           </ul>
           <p>Изменения сохраняются в браузере и восстанавливаются при повторном открытии страницы.</p>
         </div>
@@ -399,11 +429,55 @@
           <p>В режиме подготовки нажмите "Экспорт JSON" — браузер скачает файл <code>taa_config.json</code>. Храните его
             рядом. Для использования в новом стриме просто загрузите этот файл в боевом режиме.</p>
         </div>
+
+        <div class="faq-section">
+          <h2>Мини-игры и синхронизация</h2>
+          <p>После начала боевого режима в левом нижнем углу появляется панель с кнопками:</p>
+          <ul>
+            <li><strong>Мини-игры</strong> — монетка, кубик, камень-ножницы-бумага. Результаты синхронизируются между
+              стримерами.</li>
+            <li><strong>Колесо игр</strong> — выбор игр галочками, прокрутка с анимацией, сыгранные игры блокируются.
+            </li>
+            <li><strong>Таймер</strong> — можно настроить время таймера, который будет отображаться в виджете,
+              запуск/остановка синхронизируется.</li>
+          </ul>
+          <p>Все действия пишутся в общий лог (мини-лог над кнопками, полный лог по клику).</p>
+        </div>
+
+        <div class="faq-section">
+          <h2>OBS-виджеты</h2>
+          <p>Для вывода счёта и таймера в OBS используйте Browser Source с URL вида:</p>
+          <ul>
+            <li><code>widget-score.html?room=КОД</code> — счёт игр</li>
+            <li><code>widget-timer.html?room=КОД</code> — таймер обратного отсчёта</li>
+          </ul>
+          <p>КОД — это код комнаты, отображаемый на сайте после создания/подключения. Кнопки копирования этих URL
+            находятся справа снизу в боевом режиме после входа в комнату.</p>
+        </div>
       </div>
 
       <div class="faq-column">
         <div class="faq-section">
           <h2>История изменений</h2>
+          <div class="changelog" id="changelog">
+            <div class="changelog-entry" data-id="2026-05-26">
+              <span class="changelog-date">26.05.2026</span>
+              <ul>
+                <li>Добавлены мини-игры: Монетка, Кубик, Камень-Ножницы-Бумага</li>
+                <li>Добавлено Колесо случайной игры: выбор игр галочками, 3 колонки (стример/нейтральные/оппонент),
+                  сыгранные игры блокируются</li>
+                <li>Добавлен Таймер: окно с настройкой времени, запуск/остановка, виджет для OBS</li>
+                <li>Добавлены OBS-виджеты: <code>widget-score.html</code> (счёт) и <code>widget-timer.html</code>
+                  (таймер) — работают через <code>?room=КОД</code>, обновляются в реальном времени, можно скопировать на
+                  вкладке боевого режима</li>
+                <li>Добавлен мини-лог (последние 5 событий) над кнопками миниигр и прочего, клик открывает полный лог
+                  действий</li>
+                <li>Добавлен лог действий с относительным временем ("2 мин назад")</li>
+                <li>Добавлен блок "Порядок матчей" — хронология сыгранных игр с номерами, автоматически присваивается
+                  порядковый номер при отметке победителя, синхронизируется между стримерами</li>
+              </ul>
+            </div>
+          </div>
           <div class="changelog" id="changelog">
             <div class="changelog-entry" data-id="2026-05-19">
               <span class="changelog-date">19.05.2026</span>
@@ -437,10 +511,98 @@
     </div>
   </section>
 
+  <!-- ========== GUIDE ========== -->
+  <section id="mode-guide" class="mode">
+    <div class="mode-header">
+      <h1>Памятка</h1>
+      <span class="mode-subtitle">Как пользоваться сайтом</span>
+    </div>
+    <div class="faq-content">
+      <div class="faq-column">
+
+        <div class="faq-section">
+          <h2>Режим подготовки</h2>
+          <ol>
+            <li>Введите имена стримеров и название нейтральной категории</li>
+            <li>Добавьте игры в каждую категорию (нейтральные / стример №1 / стример №2)</li>
+            <li>Нажмите «Экспорт JSON» — сохраните файл для боевого режима</li>
+            <li>Ранее сохранённый JSON можно импортировать через «Импорт JSON»</li>
+          </ol>
+        </div>
+
+        <div class="faq-section">
+          <h2>Боевой режим</h2>
+          <ol>
+            <li>Перетащите JSON-файл в зону загрузки или нажмите «Выбрать файл»</li>
+            <li>Кликайте по экрану — игры открываются с анимацией по одной</li>
+            <li>Порядок: нейтральные, потом игры стримеров по очереди</li>
+            <li>После раскрытия всех — экран обзора с тремя колонками</li>
+            <li>Кликайте по кнопкам слева/справа от игры чтобы отметить победителя</li>
+            <li>Снизу отображается счёт, справа — блок «Порядок матчей»</li>
+          </ol>
+        </div>
+
+        <div class="faq-section">
+          <h2>Синхронизация с другим стримером</h2>
+          <ol>
+            <li>Загрузите JSON → нажмите «Создать комнату»</li>
+            <li>Отправьте 4-символьный код оппоненту (КОД НЕ ПОКАЗЫВАТЬ НА СТРИМЕ)</li>
+            <li>Оппонент вводит код и нажимает «Присоединиться»</li>
+            <li>Нажмите «Начать» P.S. игры не раскрываются синхронно, каждый раскрывает их сам</li>
+            <li>Если планируете пользоваться минииграми, ОБЯЗАТЕЛЬНО снизу слева в выпадающем списке отметьте кто вы есть</li>
+            <li>Отмечайте победителей — счёт и список побед синхронизируются</li>
+            <li>Кнопка «Синхронизировать» принудительно обновляет данные</li>
+            <li>Кнопка «Заново» сбрасывает комнату и возвращает к загрузке</li>
+          </ol>
+        </div>
+
+      </div>
+      <div class="faq-column">
+
+        <div class="faq-section">
+          <h2>Мини-игры и прочие штуковины</h2>
+          <p>На случай если нужно принять решение, а оно не принимается xdd</p>
+          <p>Панель с мини-играми появляется слева внизу после начала боевого режима.</p>
+          <ul>
+            <li><strong>Монетка</strong> — бросьте монетку, результат запишется в лог</li>
+            <li><strong>Кубик</strong> — выберите количество граней (d6/d12/d20/d228/d1137), бросьте</li>
+            <li><strong>КНБ</strong> — камень-ножницы-бумага: выберите фигуру, подождите выбора оппонента, после чего
+              определится победитель</li>
+            <li><strong>Колесо игр</strong> — отметьте игры галочками и крутите. Сыгранные игры
+              выбрать для колеса нельзя</li>
+            <li><strong>Таймер</strong> — введите время (минуты:секунды), нажмите «Запустить».
+              Таймер синхронизируется и появляется в виджете. Кнопка «Стоп» сбрасывает</li>
+          </ul>
+          <p>Все действия пишутся в лог — мини-лог над кнопками (последние 5 событий),
+            полный лог открывается по клику на мини-лог.</p>
+        </div>
+
+        <div class="faq-section">
+          <h2>OBS-виджеты</h2>
+          <p>Для вывода счёта и таймера в OBS используйте Browser Source:</p>
+          <ul>
+            <li><code>widget-score.html?room=КОД</code> — счёт игр (имена + очки)</li>
+            <li><code>widget-timer.html?room=КОД</code> — таймер обратного отсчёта (по дефолту скрыт, для настройки
+              можно запустить таймер, чтобы он отображался в виджете)</li>
+          </ul>
+          <p>URL можно скопировать кнопками над «Синхронизировать» в боевом режиме.</p>
+        </div>
+
+        <div class="faq-section">
+          <h2>Emote Rain</h2>
+          <p>В настройках укажите свой Twitch-канал и нажмите «Запустить дождь».
+            С каждым отправленным в чат эмоутом на экран падают 7TV-эмоуты.
+            Эмоуты подгружаются и из совместного чата (Shared Chat).</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <div id="emote-rain-container"></div>
-  <script src="app.js?nocache=anim5"></script>
-  <script src="7tv.js?nocache=anim4"></script>
-  <script src="firebase-sync.js?nocache=anim4"></script>
+  <script src="app.js?nocache=wheel16"></script>
+  <script src="7tv.js?nocache=wheel16"></script>
+  <script src="firebase-sync.js?nocache=wheel16"></script>
 </body>
 
 </html>
