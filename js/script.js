@@ -391,6 +391,14 @@ async function renderMemes(data) {
 // =============================================================================
 
 async function init() {
+  let notes = [];
+  const loadingEl = document.getElementById('loading');
+
+  // Hide loading after 3s max regardless of load status
+  const forceHide = setTimeout(() => {
+    loadingEl.classList.add('hidden');
+  }, 3000);
+
   try {
     const csv = await loadSheet(SHEET_ID, SHEET_GID);
     const data = parseCSV(csv);
@@ -398,7 +406,8 @@ async function init() {
   } catch (err) {
     console.error('Failed to load activities:', err);
     document.getElementById('ungrouped-activities').innerHTML =
-      '<p style="opacity:0.6">Не удалось загрузить активности. Проверь таблицу.</p>';
+      '<p style="opacity:0.6">Не удалось загрузить активности.</p>';
+    notes.push('активности не загрузились');
   }
 
   try {
@@ -407,6 +416,7 @@ async function init() {
     await renderMemes(memesData);
   } catch (err) {
     console.error('Failed to load memes:', err);
+    notes.push('мемы не загрузились');
   }
 
   updateTimer();
@@ -415,7 +425,12 @@ async function init() {
   fetchStreamStatus();
   setInterval(fetchStreamStatus, 60000);
 
-  document.getElementById('loading').classList.add('hidden');
+  clearTimeout(forceHide);
+  loadingEl.classList.add('hidden');
+
+  if (notes.length) {
+    document.getElementById('load-notes').textContent = '⚠ ' + notes.join(', ');
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
