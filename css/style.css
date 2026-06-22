@@ -214,7 +214,7 @@ body {
   text-decoration: underline;
 }
 
-/* Grouped blocks */
+/* Grouped groups */
 .grouped {
   display: flex;
   flex-wrap: wrap;
@@ -222,7 +222,7 @@ body {
   margin-bottom: 2rem;
 }
 
-.block {
+.group {
   flex: 1 1 30%;
   min-width: 220px;
   border-left: 4px solid #C75B39;
@@ -231,11 +231,11 @@ body {
   transform: rotate(0.3deg);
 }
 
-.block > * {
+.group > * {
   transform: rotate(-0.3deg);
 }
 
-.block h3 {
+.group h3 {
   font-family: 'Oswald', sans-serif;
   font-weight: 400;
   font-size: 1.1rem;
@@ -248,12 +248,12 @@ body {
   gap: 0.5rem;
 }
 
-.block ol {
+.group ol {
   list-style: none;
   counter-reset: activity-counter;
 }
 
-.block ol li {
+.group ol li {
   counter-increment: activity-counter;
   padding: 0.35rem 0;
   font-size: 0.95rem;
@@ -262,7 +262,7 @@ body {
   gap: 0.4rem;
 }
 
-.block ol li::before {
+.group ol li::before {
   content: counter(activity-counter) ".";
   font-family: 'Courier New', monospace;
   font-size: 0.8rem;
@@ -579,7 +579,7 @@ body {
     padding: 1.25rem 1.5rem;
   }
 
-  .block ol li {
+  .group ol li {
     padding: 0.4rem 0;
   }
 }

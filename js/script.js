@@ -83,15 +83,15 @@ function renderActivities(data) {
   grouped.innerHTML = '';
 
   const nonEmpty = data.filter(row => row.activity);
-  const blocks = {};
+  const groups = {};
   const standalone = [];
 
   nonEmpty.forEach(row => {
-    if (!row.block) {
+    if (!row.group) {
       standalone.push(row);
     } else {
-      if (!blocks[row.block]) blocks[row.block] = [];
-      blocks[row.block].push(row);
+      if (!groups[row.group]) groups[row.group] = [];
+      groups[row.group].push(row);
     }
   });
 
@@ -125,17 +125,17 @@ function renderActivities(data) {
     ungrouped.appendChild(sticker);
   });
 
-  // Render grouped blocks
-  Object.keys(blocks).forEach(blockName => {
+  // Render grouped groups
+  Object.keys(groups).forEach(groupName => {
     const section = document.createElement('div');
-    section.className = 'block';
+    section.className = 'group';
 
     const heading = document.createElement('h3');
-    heading.textContent = blockName;
+    heading.textContent = groupName;
     section.appendChild(heading);
 
     const list = document.createElement('ol');
-    blocks[blockName].forEach(row => {
+    groups[groupName].forEach(row => {
       const item = document.createElement('li');
       const status = (row.status || '').trim().toLowerCase();
 
