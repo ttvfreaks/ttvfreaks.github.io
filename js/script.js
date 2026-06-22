@@ -270,8 +270,8 @@ async function fetchStreamStatus() {
     if (isOffline) {
       dot.className = 'status-dot';
       text.textContent = 'offline';
-      titleEl.textContent = '';
-      gameEl.textContent = '';
+      titleEl.textContent = title || '';
+      gameEl.textContent = game || '';
       uptimeEl.textContent = '';
       streamUptimeBase = 0;
       if (streamUptimeTimer) clearInterval(streamUptimeTimer);
