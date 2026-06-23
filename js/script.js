@@ -10,7 +10,7 @@ const MEMES_GID = 199348167; // НЕ ТРОГАТЬ
 
 // Timezone offset in hours from UTC (e.g., 3 for Moscow UTC+3, -5 for New York UTC-5)
 const TIMEZONE_OFFSET = 3;
-const MARATHON_START_STR = '2026-06-22T12:00:00'; // start time in the above timezone
+const MARATHON_START_STR = '2026-06-23T09:22:46'; // start time in the above timezone
 
 // Constructed from offset — change TIMEZONE_OFFSET and MARATHON_START_STR above only
 const tzSign = TIMEZONE_OFFSET >= 0 ? '+' : '-';
@@ -332,19 +332,7 @@ async function renderMemes(data) {
 
   const cols = getMemeColumnCount();
   const columns = [];
-  for (let i = 0; i < cols; i++) {
-    const col = document.createElement('div');
-    col.className = 'memes-column';
-    columns.push(col);
-    list.appendChild(col);
-  }
 
-  // Force layout, then measure column width
-  void list.offsetWidth;
-  const gapPx = 0.8 * parseFloat(getComputedStyle(document.documentElement).fontSize) || 12.8;
-  const columnWidth = columns[0].offsetWidth || (list.offsetWidth - gapPx * (cols - 1)) / cols;
-
-  // Pre-load all images to get natural dimensions
   const entries = await Promise.all(data.map(row => {
     return new Promise(resolve => {
       const vals = Object.values(row);
@@ -358,6 +346,26 @@ async function renderMemes(data) {
   }));
 
   const filtered = entries.filter(Boolean);
+
+  if (filtered.length === 0) {
+    const msg = document.createElement('p');
+    msg.className = 'memes-placeholder';
+    msg.textContent = 'скоро тут что-то будет!';
+    list.appendChild(msg);
+    return;
+  }
+
+  for (let i = 0; i < cols; i++) {
+    const col = document.createElement('div');
+    col.className = 'memes-column';
+    columns.push(col);
+    list.appendChild(col);
+  }
+
+  // Force layout, then measure column width
+  void list.offsetWidth;
+  const gapPx = 0.8 * parseFloat(getComputedStyle(document.documentElement).fontSize) || 12.8;
+  const columnWidth = columns[0].offsetWidth || (list.offsetWidth - gapPx * (cols - 1)) / cols;
 
   // Distribute to the shortest column
   const columnHeights = new Array(cols).fill(0);

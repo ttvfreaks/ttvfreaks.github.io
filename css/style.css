@@ -158,13 +158,6 @@ body {
   box-shadow: 4px 4px 0 #C75B39;
 }
 
-.sticker:nth-child(3n) {
-  background: #FDF6E3;
-  color: #3D2B1F;
-  border: 2px dashed #C75B39;
-  box-shadow: none;
-}
-
 .sticker:hover {
   transform: rotate(var(--r, 0deg)) scale(1.05);
 }
@@ -503,6 +496,17 @@ body {
   object-fit: contain;
 }
 
+.memes-placeholder {
+  flex: 1;
+  text-align: center;
+  padding: 3rem 1rem;
+  opacity: 0.5;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 1.2rem;
+  color: #3D2B1F;
+}
+
 /* Lightbox */
 .lightbox {
   display: none;
@@ -547,7 +551,7 @@ body {
 /* Footer */
 .footer {
   display: flex;
-  justify-content: space-between;
+  gap: 1rem;
   padding-top: 1.5rem;
   padding-bottom: 4.5rem;
   border-top: 2px solid #D4A373;
@@ -555,6 +559,12 @@ body {
   opacity: 0.4;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+}
+
+.load-notes {
+  margin-left: auto;
+  opacity: 0.6;
+  font-style: italic;
 }
 
 /* Desktop layout */
