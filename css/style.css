@@ -6,12 +6,17 @@
   padding: 0;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   font-family: Georgia, serif;
   background: #FDF6E3;
   color: #3D2B1F;
   min-height: 100vh;
   line-height: 1.5;
+  overflow-x: hidden;
 }
 
 /* Loading screen */
@@ -154,6 +159,7 @@ body {
   display: flex;
   gap: 0.4rem;
   overflow-x: auto;
+  overflow-y: hidden;
   padding-bottom: 0.3rem;
   scrollbar-width: thin;
   scrollbar-color: #D4A373 transparent;
@@ -238,6 +244,7 @@ body {
 .digest-carousel {
   display: flex;
   overflow-x: auto;
+  overflow-y: hidden;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   padding: 0 30px;

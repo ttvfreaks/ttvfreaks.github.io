@@ -656,7 +656,14 @@ function renderDigest(data) {
     const carousel = document.getElementById('digest-carousel');
     const cards = carousel.querySelectorAll('.digest-card');
     const lastCard = cards[cards.length - 1];
-    if (lastCard) lastCard.scrollIntoView({ behavior: 'instant', inline: 'center' });
+    if (lastCard) {
+      const cardRect = lastCard.getBoundingClientRect();
+      const carouselRect = carousel.getBoundingClientRect();
+      carousel.scrollLeft = Math.max(0, Math.min(
+        carousel.scrollLeft + (cardRect.left - carouselRect.left) - carouselRect.width / 2 + cardRect.width / 2,
+        carousel.scrollWidth - carousel.clientWidth
+      ));
+    }
   });
 
   initDigestNavigation();
@@ -748,7 +755,11 @@ function goToDigest(index, carousel) {
   const cards = carousel.querySelectorAll('.digest-card');
   if (index < 0 || index >= cards.length) return;
   setActiveDigest(index, carousel);
-  cards[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  const card = cards[index];
+  const cardRect = card.getBoundingClientRect();
+  const carouselRect = carousel.getBoundingClientRect();
+  const targetScroll = carousel.scrollLeft + (cardRect.left - carouselRect.left) - carouselRect.width / 2 + cardRect.width / 2;
+  carousel.scrollLeft = Math.max(0, Math.min(targetScroll, carousel.scrollWidth - carousel.clientWidth));
 }
 
 function updateActiveDigestFromScroll(carousel) {
@@ -795,7 +806,13 @@ function setActiveDigest(index, carousel) {
 
   const hoursScroll = document.getElementById('digest-hours');
   if (hoursScroll && hours[index]) {
-    hours[index].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    const btn = hours[index];
+    const btnOffset = btn.offsetLeft - hoursScroll.offsetLeft;
+    const targetScroll = Math.max(0, Math.min(
+      btnOffset + btn.offsetWidth / 2 - hoursScroll.clientWidth / 2,
+      hoursScroll.scrollWidth - hoursScroll.clientWidth
+    ));
+    hoursScroll.scrollLeft = targetScroll;
   }
 
   prevBtn.disabled = index === 0;
@@ -816,8 +833,24 @@ function initTabs() {
       btns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       sections.forEach(s => s.classList.toggle('active', s.dataset.tab === tab));
+
+      // Scroll carousel to active card when digest tab opens
+      if (tab === 'digest') {
+        requestAnimationFrame(() => scrollToActiveCard());
+      }
     });
   });
+}
+
+function scrollToActiveCard() {
+  const carousel = document.getElementById('digest-carousel');
+  if (!carousel) return;
+  const active = carousel.querySelector('.digest-card.active');
+  if (!active) return;
+  const cardRect = active.getBoundingClientRect();
+  const carouselRect = carousel.getBoundingClientRect();
+  const targetScroll = carousel.scrollLeft + (cardRect.left - carouselRect.left) - carouselRect.width / 2 + cardRect.width / 2;
+  carousel.scrollLeft = Math.max(0, Math.min(targetScroll, carousel.scrollWidth - carousel.clientWidth));
 }
 
 // =============================================================================
