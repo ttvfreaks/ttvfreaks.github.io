@@ -16,10 +16,12 @@ body {
 
 /* Loading screen */
 .loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
   background: #C75B39;
   color: #FDF6E3;
   font-family: 'Oswald', sans-serif;
@@ -37,9 +39,7 @@ body {
   max-width: 960px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
-  padding-bottom: 0;
   position: relative;
-  overflow: hidden;
 }
 
 .container::before {
@@ -115,6 +115,263 @@ body {
   letter-spacing: 0.3em;
   color: #C75B39;
   margin-bottom: 1.25rem;
+}
+
+/* Tab navigation (mobile only) */
+.tab-nav {
+  display: none;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #D4A373;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 0.6rem 0.5rem;
+  background: none;
+  border: none;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #D4A373;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-bottom-color 0.15s;
+}
+
+.tab-btn.active {
+  color: #C75B39;
+  border-bottom-color: #C75B39;
+}
+
+/* Digest */
+.digest-header {
+  margin-bottom: 1rem;
+}
+
+.digest-hours {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.3rem;
+  scrollbar-width: thin;
+  scrollbar-color: #D4A373 transparent;
+  scroll-behavior: smooth;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.digest-hours.grabbing {
+  cursor: grabbing;
+}
+
+.digest-hours::-webkit-scrollbar {
+  height: 4px;
+}
+
+.digest-hours::-webkit-scrollbar-thumb {
+  background: #D4A373;
+  border-radius: 2px;
+}
+
+.digest-hours::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.digest-hour {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 0.25rem 0.6rem 0.2rem;
+  border: 1px solid #D4A373;
+  background: #FDF6E3;
+  font-family: 'Courier New', monospace;
+  color: #3D2B1F;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.digest-hour:hover {
+  background: #D4A373;
+  color: #FDF6E3;
+}
+
+.digest-hour.active {
+  background: #C75B39;
+  color: #FDF6E3;
+  border-color: #C75B39;
+}
+
+.digest-hour-unread::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #C75B39;
+}
+
+.digest-hour-date {
+  font-size: 0.55rem;
+  opacity: 0.5;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.digest-hour-time {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.digest-carousel-wrap {
+  position: relative;
+}
+
+.digest-carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: 0 30px;
+  scroll-padding: 30px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.digest-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.digest-card {
+  flex: 0 0 calc(100% - 60px);
+  min-width: calc(100% - 60px);
+  scroll-snap-align: center;
+  border: 2px solid #D4A373;
+  background: #FDF6E3;
+  box-shadow: 4px 4px 0 #D4A373;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  opacity: 0.3;
+  transition: opacity 0.3s, box-shadow 0.3s, border-color 0.3s, transform 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.digest-card.active {
+  opacity: 1;
+  box-shadow: 6px 6px 0 #C75B39;
+  border-color: #C75B39;
+}
+
+.digest-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  border-bottom: 2px solid #D4A373;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.digest-card-date {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: #3D2B1F;
+}
+
+.digest-card-time {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #C75B39;
+  flex-shrink: 0;
+}
+
+.digest-bullets-wrap {
+  background: #D4A37318;
+  margin: 0 -1rem;
+  padding: 0.5rem 1rem;
+}
+
+.digest-bullets {
+  margin: 0;
+  padding-left: 1.4rem;
+  list-style: none;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #3D2B1F;
+}
+
+.digest-bullets li {
+  margin-bottom: 0.25rem;
+}
+
+.digest-text {
+  font-family: Georgia, serif;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #3D2B1F;
+  opacity: 0.85;
+  border-top: 1px solid #D4A373;
+  padding-top: 0.5rem;
+  margin: 0;
+}
+
+.digest-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #D4A373;
+  background: #FDF6E3;
+  color: #3D2B1F;
+  font-size: 1.3rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 2px 0 #D4A373;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  line-height: 1;
+}
+
+.digest-arrow:hover {
+  background: #C75B39;
+  color: #FDF6E3;
+  border-color: #C75B39;
+}
+
+.digest-arrow-prev { left: 0; }
+.digest-arrow-next { right: 0; }
+
+.digest-arrow:disabled {
+  opacity: 0.2;
+  cursor: default;
+}
+
+.digest-arrow:disabled:hover {
+  background: #FDF6E3;
+  color: #3D2B1F;
+  border-color: #D4A373;
+}
+
+/* Tab sections — desktop: all visible, mobile: only active */
+.tab-section {
+  display: block;
 }
 
 /* Ungrouped stickers */
@@ -451,7 +708,7 @@ body {
 
 /* Memes */
 .memes {
-  /* margin-top: 2rem; */
+  margin-top: 2rem;
   width: 100%;
 }
 
@@ -571,7 +828,6 @@ body {
 @media (min-width: 768px) {
   .container {
     padding: 3rem 2.5rem;
-    padding-bottom: 0;
   }
 
   .hero {
@@ -592,12 +848,19 @@ body {
   .group ol li {
     padding: 0.4rem 0;
   }
+
+  .tab-nav {
+    display: none;
+  }
+
+  .tab-section {
+    display: block !important;
+  }
 }
 
 @media (max-width: 767px) {
   .container {
     padding: 1.5rem 1rem;
-    padding-bottom: 0;
   }
 
   .hero-main {
@@ -633,6 +896,14 @@ body {
   .sticker {
     font-size: 0.8rem;
     padding: 0.4rem 0.8rem;
+  }
+
+  .tab-nav {
+    display: flex;
+  }
+
+  .tab-section:not(.active) {
+    display: none;
   }
 }
 
