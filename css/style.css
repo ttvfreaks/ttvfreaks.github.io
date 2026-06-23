@@ -635,3 +635,185 @@ body {
     padding: 0.4rem 0.8rem;
   }
 }
+
+/* Submit button */
+.submit-btn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 999;
+  padding: 0.6rem 1.2rem;
+  border-radius: 2rem;
+  border: 2px solid #3D2B1F;
+  background: #C75B39;
+  color: #FDF6E3;
+  font-size: 0.85rem;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 #3D2B1F;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.submit-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 6px 6px 0 #3D2B1F;
+}
+
+/* Overlay */
+.submit-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(61, 43, 31, 0.6);
+  align-items: center;
+  justify-content: center;
+}
+
+.submit-overlay.visible {
+  display: flex;
+}
+
+/* Popover card */
+.submit-popover {
+  background: #FDF6E3;
+  border: 3px solid #D4A373;
+  box-shadow: 8px 8px 0 #D4A373;
+  padding: 2rem;
+  width: 90%;
+  max-width: 540px;
+  position: relative;
+  transform: rotate(-1deg);
+}
+
+.submit-popover > * {
+  transform: rotate(1deg);
+}
+
+.submit-popover h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 1rem;
+  margin: 0 0 1.25rem;
+  opacity: 0.6;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+}
+
+.submit-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  opacity: 0.4;
+  color: #3D2B1F;
+  font-family: Georgia, serif;
+}
+
+.submit-close:hover {
+  opacity: 1;
+}
+
+.submit-popover label {
+  display: block;
+  font-family: 'Courier New', monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.25rem;
+  opacity: 0.5;
+}
+
+.submit-popover input,
+.submit-popover textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid #D4A373;
+  background: #FDF6E3;
+  font-family: Georgia, serif;
+  font-size: 0.9rem;
+  color: #3D2B1F;
+  margin-bottom: 0.75rem;
+  transition: border-color 0.15s;
+}
+
+.submit-popover input:focus,
+.submit-popover textarea:focus {
+  outline: none;
+  border-color: #C75B39;
+}
+
+.submit-popover textarea {
+  resize: vertical;
+  min-height: 14rem;
+}
+
+.submit-action {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+.submit-send {
+  padding: 0.5rem 1.5rem;
+  border: 2px solid #3D2B1F;
+  background: #C75B39;
+  color: #FDF6E3;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #3D2B1F;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.submit-send:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #3D2B1F;
+}
+
+.submit-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Feedback message */
+.submit-feedback {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.submit-feedback.success {
+  opacity: 1;
+  color: #588157;
+}
+
+.submit-feedback.error {
+  opacity: 1;
+  color: #C75B39;
+}
+
+@media (max-width: 480px) {
+  .submit-btn {
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+  }
+  .submit-popover {
+    padding: 1.25rem;
+  }
+}

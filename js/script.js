@@ -11,6 +11,7 @@ const MEMES_GID = 199348167; // НЕ ТРОГАТЬ
 // Timezone offset in hours from UTC (e.g., 3 for Moscow UTC+3, -5 for New York UTC-5)
 const TIMEZONE_OFFSET = 3;
 const MARATHON_START_STR = '2026-06-23T09:22:46'; // start time in the above timezone
+const SUBMIT_WORKER_URL = 'https://dawn-fog-df0b.klabisotloveschina.workers.dev/';
 
 // Constructed from offset — change TIMEZONE_OFFSET and MARATHON_START_STR above only
 const tzSign = TIMEZONE_OFFSET >= 0 ? '+' : '-';
@@ -395,6 +396,123 @@ async function renderMemes(data) {
 }
 
 // =============================================================================
+// Submit meme button
+// =============================================================================
+
+function initSubmitButton() {
+  const btn = document.createElement('button');
+  btn.className = 'submit-btn';
+  btn.textContent = 'предложить...';
+  btn.setAttribute('aria-label', 'Предложить идею');
+  document.body.appendChild(btn);
+
+  const overlay = document.createElement('div');
+  overlay.className = 'submit-overlay';
+  overlay.id = 'submit-overlay';
+  document.body.appendChild(overlay);
+
+  const popover = document.createElement('div');
+  popover.className = 'submit-popover';
+  popover.id = 'submit-popover';
+  popover.innerHTML = `
+    <button type="button" class="submit-close" id="submit-close">&times;</button>
+    <h2>предложить идею</h2>
+    <label for="submit-nick">ваш ник</label>
+    <input type="text" id="submit-nick" placeholder="необязательно..." autocomplete="off">
+    <label for="submit-text">текст</label>
+    <textarea id="submit-text" placeholder="предложение, пожелание, дополнение, ссылка на мем
+
+я не смогу в соло обновлять сайт, поэтому будет классно если кто-то будет скидывать сюда важную инфу
+    
+спасибо!"></textarea>
+    <div class="submit-action">
+      <span class="submit-feedback" id="submit-feedback"></span>
+      <button class="submit-send" id="submit-send">Отправить</button>
+    </div>
+  `;
+  overlay.appendChild(popover);
+
+  let closeTimer = null;
+  const closeBtn = document.getElementById('submit-close');
+  const sendBtn = document.getElementById('submit-send');
+  const nickInput = document.getElementById('submit-nick');
+  const textInput = document.getElementById('submit-text');
+  const feedbackEl = document.getElementById('submit-feedback');
+
+  function openForm() {
+    overlay.classList.add('visible');
+    nickInput.focus();
+  }
+
+  function closeForm() {
+    if (closeTimer) clearTimeout(closeTimer);
+    overlay.classList.remove('visible');
+    feedbackEl.className = 'submit-feedback';
+    feedbackEl.textContent = '';
+    sendBtn.disabled = false;
+    sendBtn.textContent = 'Отправить';
+  }
+
+  btn.addEventListener('click', () => {
+    if (overlay.classList.contains('visible')) {
+      closeForm();
+    } else {
+      openForm();
+    }
+  });
+
+  closeBtn.addEventListener('click', closeForm);
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) closeForm();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeForm();
+  });
+
+  sendBtn.addEventListener('click', async () => {
+    const nick = nickInput.value.trim();
+    const text = textInput.value.trim();
+
+    if (!text) {
+      feedbackEl.className = 'submit-feedback error';
+      feedbackEl.textContent = 'Напиши что-нибудь';
+      return;
+    }
+
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'отправляется...';
+    feedbackEl.className = 'submit-feedback';
+    feedbackEl.textContent = '';
+
+    try {
+      const res = await fetch(SUBMIT_WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nick, text }),
+      });
+      if (res.ok) {
+        feedbackEl.className = 'submit-feedback success';
+        feedbackEl.textContent = 'Отправлено, спасибо ♥';
+        nickInput.value = '';
+        textInput.value = '';
+        closeTimer = setTimeout(closeForm, 2000);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        feedbackEl.className = 'submit-feedback error';
+        feedbackEl.textContent = data.error || 'Что-то пошло не так. Попробуй ещё раз.';
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Отправить';
+      }
+    } catch {
+      feedbackEl.className = 'submit-feedback error';
+      feedbackEl.textContent = 'Что-то пошло не так. Попробуй ещё раз.';
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Отправить';
+    }
+  });
+}
+
+// =============================================================================
 // Init
 // =============================================================================
 
@@ -432,6 +550,7 @@ async function init() {
 
   fetchStreamStatus();
   setInterval(fetchStreamStatus, 60000);
+  initSubmitButton();
 
   clearTimeout(forceHide);
   loadingEl.classList.add('hidden');
