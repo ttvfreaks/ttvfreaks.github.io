@@ -888,6 +888,20 @@ body {
     text-align: center;
   }
 
+  .digest-carousel {
+    padding: 0;
+    scroll-padding: 0;
+  }
+
+  .digest-card {
+    flex: 0 0 100%;
+    min-width: 100%;
+  }
+
+  .digest-arrow {
+    display: none;
+  }
+
   .hero-main > :last-child {
     align-self: center;
   }
