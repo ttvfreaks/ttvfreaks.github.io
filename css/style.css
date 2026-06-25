@@ -277,6 +277,17 @@ body {
   border-color: #C75B39;
 }
 
+.digest-hour-fullday {
+  margin-left: 0.4rem;
+  border-left: 2px solid #C75B39;
+  font-style: italic;
+  letter-spacing: 0.03em;
+}
+
+.digest-hour-fullday.active {
+  font-style: normal;
+}
+
 .digest-hour-unread::after {
   content: '';
   position: absolute;

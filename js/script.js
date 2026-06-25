@@ -544,10 +544,17 @@ function parseDigestCSV(csvText) {
   for (let i = startIdx; i < rows.length; i++) {
     const cols = parseCSVRow(rows[i]);
     if (cols.length < 2) continue;
+    let time = (cols[0] || '').trim();
+    const isFullDay = /^DIGEST:(\d{8})$/i.test(time);
+    if (isFullDay) {
+      const m = time.match(/\d{8}/);
+      time = m[0];
+    }
     data.push({
-      time: (cols[0] || '').trim(),
+      time,
       fullText: (cols[1] || '').trim(),
       bullets: (cols[2] || '').trim(),
+      isFullDay,
     });
   }
   return data;
@@ -606,12 +613,15 @@ function renderDigest(data) {
     return;
   }
 
-  // Group by day (preserve insertion order)
+  // Group by day (preserve insertion order, full-day last)
   digestGroups = {};
   digestData.forEach(entry => {
     const date = formatDigestDate(entry.time);
     if (!digestGroups[date]) digestGroups[date] = [];
     digestGroups[date].push(entry);
+  });
+  Object.values(digestGroups).forEach(entries => {
+    entries.sort((a, b) => (a.isFullDay ? 1 : 0) - (b.isFullDay ? 1 : 0));
   });
   digestDays = Object.keys(digestGroups);
   activeDay = digestDays[digestDays.length - 1];
@@ -661,9 +671,11 @@ function renderHoursForDay(dayKey) {
   el.id = 'digest-hours';
   el.innerHTML = entries.map((entry, i) => {
     const isUnread = i !== lastIdx && !readTimestamps.includes(entry.time);
+    const label = entry.isFullDay ? 'Итоги дня' : (i === lastIdx ? formatDigestRange(entry.time) : formatDigestShort(entry.time));
+    const cls = `digest-hour${i === lastIdx ? ' active' : ''}${isUnread ? ' digest-hour-unread' : ''}${entry.isFullDay ? ' digest-hour-fullday' : ''}`;
     return `
-      <button class="digest-hour${i === lastIdx ? ' active' : ''}${isUnread ? ' digest-hour-unread' : ''}" data-index="${i}">
-        <span class="digest-hour-time">${i === lastIdx ? formatDigestRange(entry.time) : formatDigestShort(entry.time)}</span>
+      <button class="${cls}" data-index="${i}">
+        <span class="digest-hour-time">${label}</span>
       </button>
     `;
   }).join('');
@@ -689,7 +701,7 @@ function renderCarouselForDay(dayKey) {
       ${entries.map((entry, i) => {
         const bullets = entry.bullets ? entry.bullets.split('; ').filter(Boolean) : [];
         const date = formatDigestDate(entry.time);
-        const range = formatDigestRange(entry.time);
+        const range = entry.isFullDay ? 'Итоги дня' : formatDigestRange(entry.time);
         return `
           <div class="digest-slide${i === lastIdx ? ' active' : ''}" data-index="${i}">
             <div class="digest-card">
@@ -916,7 +928,7 @@ function setActiveDigest(index, carousel) {
     if (!entry) return;
     const timeSpan = h.querySelector('.digest-hour-time');
     if (timeSpan) {
-      timeSpan.textContent = i === index ? formatDigestRange(entry.time) : formatDigestShort(entry.time);
+      timeSpan.textContent = entry.isFullDay ? 'Итоги дня' : (i === index ? formatDigestRange(entry.time) : formatDigestShort(entry.time));
     }
   });
 
