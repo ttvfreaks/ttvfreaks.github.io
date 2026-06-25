@@ -576,6 +576,9 @@ function formatDigestShort(timestamp) {
 }
 
 let digestData = [];
+let digestGroups = {};
+let digestDays = [];
+let activeDay = '';
 
 function getReadDigests() {
   try {
@@ -594,165 +597,287 @@ function markDigestRead(timestamp) {
 }
 
 function renderDigest(data) {
-  digestData = data;
+  digestData = data || [];
   const container = document.getElementById('digest-timeline');
   container.innerHTML = '';
 
-  if (!data || data.length === 0) {
+  if (!digestData.length) {
     container.innerHTML = '<div class="memes-placeholder">дайджест скоро появится!</div>';
     return;
   }
 
-  const lastIdx = data.length - 1;
+  // Group by day (preserve insertion order)
+  digestGroups = {};
+  digestData.forEach(entry => {
+    const date = formatDigestDate(entry.time);
+    if (!digestGroups[date]) digestGroups[date] = [];
+    digestGroups[date].push(entry);
+  });
+  digestDays = Object.keys(digestGroups);
+  activeDay = digestDays[digestDays.length - 1];
+
+  renderDayTabs();
+  renderHoursForDay(activeDay);
+  renderCarouselForDay(activeDay);
+}
+
+function parseDateParts(dateStr) {
+  const parts = dateStr.split(' ');
+  return { day: parts[0] || dateStr, month: parts[1] || '' };
+}
+
+function renderDayTabs() {
+  const el = document.createElement('div');
+  el.className = 'digest-days';
+  el.id = 'digest-days';
+  el.innerHTML = digestDays.map(d => {
+    const p = parseDateParts(d);
+    return `
+      <button class="digest-day${d === activeDay ? ' active' : ''}" data-day="${d}">
+        <span class="digest-day-num">${p.day}</span>
+        <span class="digest-day-month">${p.month}</span>
+      </button>
+    `;
+  }).join('');
+
+  el.addEventListener('click', (e) => {
+    const btn = e.target.closest('.digest-day');
+    if (btn && btn.dataset.day !== activeDay) switchDay(btn.dataset.day);
+  });
+
+  const header = document.querySelector('.digest-header') || document.getElementById('digest-timeline');
+  header.prepend(el);
+}
+
+function renderHoursForDay(dayKey) {
+  const entries = digestGroups[dayKey];
+  if (!entries) return;
+  const lastIdx = entries.length - 1;
   const readTimestamps = getReadDigests();
-  markDigestRead(data[lastIdx].time);
+  markDigestRead(entries[lastIdx].time);
 
-  // Header: hours timeline
-  const header = document.createElement('div');
-  header.className = 'digest-header';
-  header.innerHTML = `
-    <div class="digest-hours" id="digest-hours">
-      ${data.map((entry, i) => {
-        const isUnread = i !== lastIdx && !readTimestamps.includes(entry.time);
-        return `
-          <button class="digest-hour${i === lastIdx ? ' active' : ''}${isUnread ? ' digest-hour-unread' : ''}" data-index="${i}">
-            <span class="digest-hour-date">${formatDigestDate(entry.time)}</span>
-            <span class="digest-hour-time">${i === lastIdx ? formatDigestRange(entry.time) : formatDigestShort(entry.time)}</span>
-          </button>
-        `;
-      }).join('')}
-    </div>
-  `;
-  container.appendChild(header);
+  const el = document.createElement('div');
+  el.className = 'digest-hours';
+  el.id = 'digest-hours';
+  el.innerHTML = entries.map((entry, i) => {
+    const isUnread = i !== lastIdx && !readTimestamps.includes(entry.time);
+    return `
+      <button class="digest-hour${i === lastIdx ? ' active' : ''}${isUnread ? ' digest-hour-unread' : ''}" data-index="${i}">
+        <span class="digest-hour-time">${i === lastIdx ? formatDigestRange(entry.time) : formatDigestShort(entry.time)}</span>
+      </button>
+    `;
+  }).join('');
 
-  // Carousel wrap with arrows
+  const header = document.querySelector('.digest-header') || document.getElementById('digest-timeline');
+  header.appendChild(el);
+
+  setupHoursDragScroll(el);
+  el.addEventListener('click', handleHourClick);
+}
+
+function renderCarouselForDay(dayKey) {
+  const entries = digestGroups[dayKey];
+  if (!entries) return;
+  const lastIdx = entries.length - 1;
+
   const wrap = document.createElement('div');
   wrap.className = 'digest-carousel-wrap';
   wrap.innerHTML = `
     <button class="digest-arrow digest-arrow-prev" id="digest-arrow-prev">‹</button>
     <button class="digest-arrow digest-arrow-next" id="digest-arrow-next"${lastIdx === 0 ? ' disabled' : ''}>›</button>
     <div class="digest-carousel" id="digest-carousel">
-      ${data.map((entry, i) => {
+      ${entries.map((entry, i) => {
         const bullets = entry.bullets ? entry.bullets.split('; ').filter(Boolean) : [];
         const date = formatDigestDate(entry.time);
         const range = formatDigestRange(entry.time);
         return `
-          <div class="digest-card${i === lastIdx ? ' active' : ''}" data-index="${i}">
-            <div class="digest-card-header">
-              <span class="digest-card-date">${date}</span>
-              <span class="digest-card-time">${range}</span>
+          <div class="digest-slide${i === lastIdx ? ' active' : ''}" data-index="${i}">
+            <div class="digest-card">
+              <div class="digest-card-header">
+                <span class="digest-card-date">${date}</span>
+                <span class="digest-card-time">${range}</span>
+              </div>
+              ${bullets.length ? `<div class="digest-bullets-wrap"><ul class="digest-bullets">${bullets.map(b => `<li>${b}</li>`).join('')}</ul></div>` : ''}
+              <p class="digest-text">${entry.fullText}</p>
             </div>
-            ${bullets.length ? `<div class="digest-bullets-wrap"><ul class="digest-bullets">${bullets.map(b => `<li>${b}</li>`).join('')}</ul></div>` : ''}
-            <p class="digest-text">${entry.fullText}</p>
+            <div class="digest-card-share" data-id="digest-${entry.time}">
+              <i class="fas fa-link"></i> Скопировать ссылку на этот дайджест
+            </div>
           </div>
         `;
       }).join('')}
     </div>
   `;
+
+  const container = document.getElementById('digest-timeline');
   container.appendChild(wrap);
 
-  // Force initial snap to last card
-  requestAnimationFrame(() => {
-    const carousel = document.getElementById('digest-carousel');
-    const cards = carousel.querySelectorAll('.digest-card');
-    const lastCard = cards[cards.length - 1];
-    if (lastCard) {
-      const cardRect = lastCard.getBoundingClientRect();
-      const carouselRect = carousel.getBoundingClientRect();
-      carousel.scrollLeft = Math.max(0, Math.min(
-        carousel.scrollLeft + (cardRect.left - carouselRect.left) - carouselRect.width / 2 + cardRect.width / 2,
-        carousel.scrollWidth - carousel.clientWidth
-      ));
-    }
-  });
+  // Carousel event listeners
+  const carousel = wrap.querySelector('.digest-carousel');
+  const prevBtn = wrap.querySelector('.digest-arrow-prev');
+  const nextBtn = wrap.querySelector('.digest-arrow-next');
 
-  initDigestNavigation();
-}
-
-function initDigestNavigation() {
-  const carousel = document.getElementById('digest-carousel');
-  const prevBtn = document.getElementById('digest-arrow-prev');
-  const nextBtn = document.getElementById('digest-arrow-next');
-  const hoursEl = document.getElementById('digest-hours');
-
-  // Debounced scroll handler
   let scrollTimer;
   carousel.addEventListener('scroll', () => {
     clearTimeout(scrollTimer);
     scrollTimer = setTimeout(() => updateActiveDigestFromScroll(carousel), 150);
   }, { passive: true });
 
-  // Arrow clicks
   prevBtn.addEventListener('click', () => navigateDigest(-1));
   nextBtn.addEventListener('click', () => navigateDigest(1));
+}
 
-  // Drag-to-scroll for hours strip
-  let isDown = false;
-  let startX;
-  let scrollLeft;
-  let didDrag = false;
+function switchDay(dayKey, targetIndex) {
+  activeDay = dayKey;
 
-  function onPointerDown(e) {
-    if (e.pointerType !== 'mouse') return;
-    isDown = true;
-    startX = e.pageX - hoursEl.offsetLeft;
-    scrollLeft = hoursEl.scrollLeft;
-    didDrag = false;
-    hoursEl.classList.add('grabbing');
-  }
-
-  function onPointerMove(e) {
-    if (!isDown || e.pointerType !== 'mouse') return;
-    const x = e.pageX - hoursEl.offsetLeft;
-    const walk = (x - startX) * 1.5;
-    hoursEl.scrollLeft = scrollLeft - walk;
-    if (Math.abs(walk) > 3) didDrag = true;
-  }
-
-  function onPointerUp(e) {
-    if (!isDown) return;
-    if (e.pointerType && e.pointerType !== 'mouse') return;
-    isDown = false;
-    hoursEl.classList.remove('grabbing');
-  }
-
-  hoursEl.addEventListener('pointerdown', onPointerDown);
-  document.addEventListener('pointermove', onPointerMove);
-  document.addEventListener('pointerup', onPointerUp);
-  document.addEventListener('pointercancel', onPointerUp);
-
-  // Timeline clicks (skip if was a drag)
-  hoursEl.addEventListener('click', (e) => {
-    if (didDrag) return;
-    const btn = e.target.closest('.digest-hour');
-    if (btn) goToDigest(parseInt(btn.dataset.index), carousel);
+  document.querySelectorAll('.digest-day').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.day === dayKey);
   });
 
-  // Keyboard navigation when digest section is visible
-  document.addEventListener('keydown', (e) => {
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-    const digestSection = document.querySelector('.tab-section[data-tab="digest"]');
-    if (!digestSection) return;
-    const isDesktop = window.innerWidth >= 768;
-    if (!isDesktop && !digestSection.classList.contains('active')) return;
-    if (!document.querySelector('.digest-card')) return;
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-    e.preventDefault();
-    navigateDigest(e.key === 'ArrowLeft' ? -1 : 1);
+  // Replace hours
+  const oldHours = document.getElementById('digest-hours');
+  if (oldHours) oldHours.remove();
+  renderHoursForDay(dayKey);
+
+  // Replace carousel
+  const oldWrap = document.querySelector('.digest-carousel-wrap');
+  if (oldWrap) oldWrap.remove();
+  renderCarouselForDay(dayKey);
+
+  if (targetIndex !== undefined && targetIndex >= 0) {
+    requestAnimationFrame(() => {
+      const carousel = document.getElementById('digest-carousel');
+      if (carousel) goToDigest(targetIndex, carousel);
+      document.getElementById('digest-timeline').scrollIntoView({ block: 'start', behavior: 'smooth' });
+    });
+  } else {
+    requestAnimationFrame(scrollToActiveCard);
+  }
+}
+
+function handleHourClick(e) {
+  if (dragDidDrag) return;
+  const btn = e.target.closest('.digest-hour');
+  if (!btn) return;
+  const carousel = document.getElementById('digest-carousel');
+  if (!carousel) return;
+  goToDigest(parseInt(btn.dataset.index), carousel);
+}
+
+// Share card link
+document.getElementById('digest-timeline').addEventListener('click', (e) => {
+  const shareBar = e.target.closest('.digest-card-share');
+  if (shareBar) copyCardLink(shareBar);
+});
+
+function copyCardLink(el) {
+  const id = el.dataset.id;
+  if (!id) return;
+  const url = window.location.origin + window.location.pathname + '#' + id;
+  const orig = el.innerHTML;
+
+  navigator.clipboard.writeText(url).then(() => {
+    el.innerHTML = '<i class="fas fa-check"></i> Скопировано!';
+    el.classList.add('copied');
+    setTimeout(() => {
+      el.innerHTML = orig;
+      el.classList.remove('copied');
+    }, 1500);
+  }).catch(() => {
+    el.innerHTML = '<i class="fas fa-times"></i> Ошибка';
+    setTimeout(() => el.innerHTML = orig, 1500);
   });
 }
 
+function navigateToDigestEntry(entryId) {
+  const timeStr = entryId.replace(/^digest-/, '');
+  const entry = digestData.find(e => e.time === timeStr);
+  if (!entry) return;
+
+  const date = formatDigestDate(entry.time);
+  const dayKey = digestDays.find(d => d === date);
+  if (!dayKey) return;
+
+  const entries = digestGroups[dayKey];
+  const idx = entries.indexOf(entry);
+  if (idx < 0) return;
+
+  switchDay(dayKey, idx);
+}
+
+function checkDigestHash() {
+  const hash = window.location.hash.slice(1);
+  if (!hash || !hash.startsWith('digest-')) return false;
+  navigateToDigestEntry(hash);
+  return true;
+}
+
+// Drag state (module level for one-time document listeners)
+let dragIsDown = false;
+let dragStartX = 0;
+let dragScrollLeft = 0;
+let dragDidDrag = false;
+
+function setupHoursDragScroll(hoursEl) {
+  hoursEl.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    dragIsDown = true;
+    dragStartX = e.pageX - hoursEl.offsetLeft;
+    dragScrollLeft = hoursEl.scrollLeft;
+    dragDidDrag = false;
+    hoursEl.classList.add('grabbing');
+  });
+}
+
+document.addEventListener('pointermove', (e) => {
+  if (!dragIsDown || e.pointerType !== 'mouse') return;
+  const hoursEl = document.getElementById('digest-hours');
+  if (!hoursEl) return;
+  const x = e.pageX - hoursEl.offsetLeft;
+  const walk = (x - dragStartX) * 1.5;
+  hoursEl.scrollLeft = dragScrollLeft - walk;
+  if (Math.abs(walk) > 3) dragDidDrag = true;
+});
+
+document.addEventListener('pointerup', (e) => {
+  if (!dragIsDown) return;
+  if (e.pointerType && e.pointerType !== 'mouse') return;
+  dragIsDown = false;
+  const hoursEl = document.getElementById('digest-hours');
+  if (hoursEl) hoursEl.classList.remove('grabbing');
+});
+
+document.addEventListener('pointercancel', () => {
+  if (!dragIsDown) return;
+  dragIsDown = false;
+  const hoursEl = document.getElementById('digest-hours');
+  if (hoursEl) hoursEl.classList.remove('grabbing');
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const digestSection = document.querySelector('.tab-section[data-tab="digest"]');
+  if (!digestSection) return;
+  const isDesktop = window.innerWidth >= 768;
+  if (!isDesktop && !digestSection.classList.contains('active')) return;
+  if (!document.querySelector('.digest-slide')) return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  e.preventDefault();
+  navigateDigest(e.key === 'ArrowLeft' ? -1 : 1);
+});
+
 function navigateDigest(delta) {
-  const active = document.querySelector('.digest-card.active');
+  const active = document.querySelector('.digest-slide.active');
   if (!active) return;
-  const cards = document.querySelectorAll('.digest-card');
+  const cards = document.querySelectorAll('.digest-slide');
   const next = Math.max(0, Math.min(cards.length - 1, parseInt(active.dataset.index) + delta));
   goToDigest(next, document.getElementById('digest-carousel'));
 }
 
 function goToDigest(index, carousel) {
   carousel = carousel || document.getElementById('digest-carousel');
-  const cards = carousel.querySelectorAll('.digest-card');
+  const cards = carousel.querySelectorAll('.digest-slide');
   if (index < 0 || index >= cards.length) return;
   setActiveDigest(index, carousel);
   const card = cards[index];
@@ -763,7 +888,7 @@ function goToDigest(index, carousel) {
 }
 
 function updateActiveDigestFromScroll(carousel) {
-  const cards = carousel.querySelectorAll('.digest-card');
+  const cards = carousel.querySelectorAll('.digest-slide');
   if (!cards.length) return;
   const center = carousel.scrollLeft + carousel.clientWidth / 2;
   let closest = 0;
@@ -777,7 +902,7 @@ function updateActiveDigestFromScroll(carousel) {
 }
 
 function setActiveDigest(index, carousel) {
-  const cards = carousel.querySelectorAll('.digest-card');
+  const cards = carousel.querySelectorAll('.digest-slide');
   const hours = document.querySelectorAll('.digest-hour');
   const prevBtn = document.getElementById('digest-arrow-prev');
   const nextBtn = document.getElementById('digest-arrow-next');
@@ -786,22 +911,20 @@ function setActiveDigest(index, carousel) {
     c.classList.toggle('active', i === index);
   });
   hours.forEach((h, i) => {
-    const entry = digestData[i];
     h.classList.toggle('active', i === index);
+    const entry = (digestGroups[activeDay] || [])[i];
+    if (!entry) return;
     const timeSpan = h.querySelector('.digest-hour-time');
-    const dateSpan = h.querySelector('.digest-hour-date');
     if (timeSpan) {
       timeSpan.textContent = i === index ? formatDigestRange(entry.time) : formatDigestShort(entry.time);
     }
-    if (dateSpan) {
-      dateSpan.textContent = formatDigestDate(entry.time);
-    }
   });
 
-  const entry = digestData[index];
+  const entries = digestGroups[activeDay] || [];
+  const entry = entries[index];
   if (entry) {
     markDigestRead(entry.time);
-    hours[index].classList.remove('digest-hour-unread');
+    hours[index] && hours[index].classList.remove('digest-hour-unread');
   }
 
   const hoursScroll = document.getElementById('digest-hours');
@@ -845,7 +968,7 @@ function initTabs() {
 function scrollToActiveCard() {
   const carousel = document.getElementById('digest-carousel');
   if (!carousel) return;
-  const active = carousel.querySelector('.digest-card.active');
+  const active = carousel.querySelector('.digest-slide.active');
   if (!active) return;
   const cardRect = active.getBoundingClientRect();
   const carouselRect = carousel.getBoundingClientRect();
@@ -890,6 +1013,17 @@ async function init() {
     const digestCsv = await loadSheet(SHEET_ID, DIGEST_GID);
     const digestData = parseDigestCSV(digestCsv);
     renderDigest(digestData);
+    if (window.location.hash) {
+      const digestTab = document.querySelector('.tab-btn[data-tab="digest"]');
+      if (digestTab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        digestTab.classList.add('active');
+        document.querySelectorAll('.tab-section').forEach(s => s.classList.toggle('active', s.dataset.tab === 'digest'));
+      }
+      checkDigestHash();
+    } else {
+      requestAnimationFrame(scrollToActiveCard);
+    }
   } catch (err) {
     console.error('Failed to load digest:', err);
     notes.push('дайджест не загрузился');
