@@ -11,8 +11,10 @@ const DIGEST_GID = 1011757384;
 
 // Timezone offset in hours from UTC (e.g., 3 for Moscow UTC+3, -5 for New York UTC-5)
 const TIMEZONE_OFFSET = 3;
+const VIEWER_DIFF = (-new Date().getTimezoneOffset() / 60) - TIMEZONE_OFFSET;
 const MARATHON_START_STR = '2026-06-23T09:22:46'; // start time in the above timezone
 const SUBMIT_WORKER_URL = 'https://dawn-fog-df0b.klabisotloveschina.workers.dev/';
+const MARATHON_END_GID = 306131304;
 
 // Constructed from offset — change TIMEZONE_OFFSET and MARATHON_START_STR above only
 const tzSign = TIMEZONE_OFFSET >= 0 ? '+' : '-';
@@ -186,6 +188,29 @@ function renderActivities(data) {
 
 function updateTimer() {
   const now = new Date();
+
+  if (marathonEndDate && now >= marathonEndDate) {
+    if (timerEnded) return;
+    timerEnded = true;
+    const endDiff = marathonEndDate - MARATHON_START;
+    const totalSeconds = Math.max(0, Math.floor(endDiff / 1000));
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    document.getElementById('timer-display').innerHTML = `
+      <span class="timer-days">${days}</span>
+      <span class="timer-days-label">дн</span>
+      <div class="timer-hms">
+        <span>${String(hours).padStart(2, '0')}</span><span class="unit">ч</span>
+        <span>${String(minutes).padStart(2, '0')}</span><span class="unit">мин</span>
+        <span>${String(seconds).padStart(2, '0')}</span><span class="unit">сек</span>
+      </div>
+    `;
+    document.getElementById('timer-sublabel').textContent = 'продлился Полакофон';
+    return;
+  }
+
   const diff = now - MARATHON_START;
 
   if (diff < 0) {
@@ -209,6 +234,20 @@ function updateTimer() {
       <span>${String(seconds).padStart(2, '0')}</span><span class="unit">сек</span>
     </div>
   `;
+
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const local = new Date(utc + TIMEZONE_OFFSET * 3600000);
+  const currentHour = local.getHours();
+  if (currentHour !== lastPolledHour && lastPolledHour >= 0) {
+    const ymd = getYMDForHour(lastPolledHour);
+    const dateStr = formatDigestDate(ymd);
+    const hasDaily = digestData.some(e => e.isFullDay && formatDigestDate(e.time) === dateStr);
+    if (!hasDaily && lastPolledHour >= 8 && lastPolledHour <= 23) {
+      if (isPolling) stopPolling();
+      startDigestPolling(lastPolledHour);
+    }
+  }
+  lastPolledHour = currentHour;
 }
 
 // =============================================================================
@@ -574,12 +613,16 @@ function formatDigestDate(timestamp) {
 function formatDigestRange(timestamp) {
   const m = timestamp.match(/_(\d{2})(\d{2})-(\d{2})(\d{2})/);
   if (!m) return timestamp;
-  return `${m[1]}:${m[2]}–${m[3]}:${m[4]}`;
+  const h1 = (parseInt(m[1], 10) + VIEWER_DIFF + 24) % 24;
+  const h2 = (parseInt(m[3], 10) + VIEWER_DIFF + 24) % 24;
+  return `${String(h1).padStart(2, '0')}:${m[2]}–${String(h2).padStart(2, '0')}:${m[4]}`;
 }
 
 function formatDigestShort(timestamp) {
   const m = timestamp.match(/_(\d{2})\d{2}/);
-  return m ? `${m[1]}ч` : timestamp;
+  if (!m) return timestamp;
+  const h = (parseInt(m[1], 10) + VIEWER_DIFF + 24) % 24;
+  return `${h}ч`;
 }
 
 let digestData = [];
@@ -659,6 +702,19 @@ function renderDayTabs() {
   header.prepend(el);
 }
 
+function getLocalDateStr(entry) {
+  if (entry.isFullDay) return null;
+  const m = entry.time.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})-(\d{2})(\d{2})/);
+  if (!m) return null;
+  const y = parseInt(m[1], 10), month = parseInt(m[2], 10) - 1, day = parseInt(m[3], 10);
+  const startH = parseInt(m[4], 10);
+  const shift = Math.floor((startH + VIEWER_DIFF) / 24);
+  if (shift === 0) return null;
+  const local = new Date(y, month, day + shift);
+  const ymd = String(local.getFullYear()) + String(local.getMonth() + 1).padStart(2, '0') + String(local.getDate()).padStart(2, '0');
+  return formatDigestDate(ymd);
+}
+
 function renderHoursForDay(dayKey) {
   const entries = digestGroups[dayKey];
   if (!entries) return;
@@ -672,10 +728,12 @@ function renderHoursForDay(dayKey) {
   el.innerHTML = entries.map((entry, i) => {
     const isUnread = i !== lastIdx && !readTimestamps.includes(entry.time);
     const label = entry.isFullDay ? 'Итоги дня' : (i === lastIdx ? formatDigestRange(entry.time) : formatDigestShort(entry.time));
+    const localDate = getLocalDateStr(entry);
     const cls = `digest-hour${i === lastIdx ? ' active' : ''}${isUnread ? ' digest-hour-unread' : ''}${entry.isFullDay ? ' digest-hour-fullday' : ''}`;
     return `
       <button class="${cls}" data-index="${i}">
         <span class="digest-hour-time">${label}</span>
+        ${localDate ? `<span class="digest-hour-date">${localDate}</span>` : ''}
       </button>
     `;
   }).join('');
@@ -751,6 +809,10 @@ function switchDay(dayKey, targetIndex) {
   if (oldHours) oldHours.remove();
   renderHoursForDay(dayKey);
 
+  if (isPolling && dayKey === getTodayDateStr()) {
+    createPollingPlaceholder(dayKey);
+  }
+
   // Replace carousel
   const oldWrap = document.querySelector('.digest-carousel-wrap');
   if (oldWrap) oldWrap.remove();
@@ -822,6 +884,145 @@ function checkDigestHash() {
   if (!hash || !hash.startsWith('digest-')) return false;
   navigateToDigestEntry(hash);
   return true;
+}
+
+// =============================================================================
+// Marathon end
+// =============================================================================
+
+let marathonEndDate = null;
+let timerEnded = false;
+
+// =============================================================================
+// Digest polling
+// =============================================================================
+
+let pollTimer = null;
+let pollAttempts = 0;
+let isPolling = false;
+let pollingHour = -1;
+let pollAnimInterval = null;
+let lastPolledHour = -1;
+
+function getTodayYMD() {
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const local = new Date(utc + TIMEZONE_OFFSET * 3600000);
+  const y = local.getFullYear();
+  const m = String(local.getMonth() + 1).padStart(2, '0');
+  const d = String(local.getDate()).padStart(2, '0');
+  return `${y}${m}${d}`;
+}
+
+function getTodayDateStr() {
+  return formatDigestDate(getTodayYMD());
+}
+
+function getYMDForHour(hour) {
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const local = new Date(utc + TIMEZONE_OFFSET * 3600000);
+  if (local.getHours() < hour) local.setDate(local.getDate() - 1);
+  const y = local.getFullYear();
+  const m = String(local.getMonth() + 1).padStart(2, '0');
+  const d = String(local.getDate()).padStart(2, '0');
+  return `${y}${m}${d}`;
+}
+
+function createPollingPlaceholder(dayKey) {
+  const hoursEl = document.getElementById('digest-hours');
+  if (!hoursEl) return;
+  const btn = document.createElement('button');
+  btn.className = 'digest-hour digest-hour-loading';
+  btn.dataset.index = '-1';
+  btn.innerHTML = '<span class="digest-hour-time">...</span>';
+  btn.disabled = true;
+  hoursEl.appendChild(btn);
+  let dots = 1;
+  const timeSpan = btn.querySelector('.digest-hour-time');
+  pollAnimInterval = setInterval(() => {
+    dots = dots >= 3 ? 1 : dots + 1;
+    if (timeSpan) timeSpan.textContent = '.'.repeat(dots);
+  }, 500);
+}
+
+function removePollingPlaceholder() {
+  clearInterval(pollAnimInterval);
+  pollAnimInterval = null;
+  const loadingBtn = document.querySelector('.digest-hour-loading');
+  if (loadingBtn) loadingBtn.remove();
+}
+
+function stopPolling() {
+  clearTimeout(pollTimer);
+  pollTimer = null;
+  isPolling = false;
+  pollingHour = -1;
+  removePollingPlaceholder();
+}
+
+function pollForNewDigest() {
+  pollTimer = null;
+  loadSheet(SHEET_ID, DIGEST_GID).then(csvText => {
+    const data = parseDigestCSV(csvText);
+    const existingTimes = new Set(digestData.map(e => e.time));
+    const hasNew = data.some(e => !existingTimes.has(e.time));
+    if (hasNew) {
+      onDigestFound(data);
+      return;
+    }
+    pollAttempts++;
+    if (pollAttempts >= 5) {
+      stopPolling();
+      return;
+    }
+    pollTimer = setTimeout(pollForNewDigest, 60000);
+  }).catch(() => {
+    pollAttempts++;
+    if (pollAttempts >= 5) {
+      stopPolling();
+      return;
+    }
+    pollTimer = setTimeout(pollForNewDigest, 60000);
+  });
+}
+
+function onDigestFound(freshData) {
+  removePollingPlaceholder();
+  clearTimeout(pollTimer);
+  pollTimer = null;
+  isPolling = false;
+  pollingHour = -1;
+
+  const currentTab = document.querySelector('.tab-btn.active')?.dataset?.tab;
+  renderDigest(freshData);
+  if (currentTab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === currentTab));
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.toggle('active', s.dataset.tab === currentTab));
+  }
+  requestAnimationFrame(scrollToActiveCard);
+}
+
+function startDigestPolling(hour) {
+  if (isPolling) return;
+  if (hour < 8 || hour > 23) return;
+
+  const ymd = getYMDForHour(hour);
+  const dateStr = formatDigestDate(ymd);
+  if (digestData.some(e => e.isFullDay && formatDigestDate(e.time) === dateStr)) return;
+
+  const prefix = `${ymd}_${String(hour).padStart(2, '0')}`;
+  if (digestData.some(e => e.time.startsWith(prefix))) return;
+
+  isPolling = true;
+  pollingHour = hour;
+  pollAttempts = 0;
+
+  if (activeDay === getTodayDateStr()) {
+    createPollingPlaceholder(activeDay);
+  }
+
+  pollForNewDigest();
 }
 
 // Drag state (module level for one-time document listeners)
@@ -1039,6 +1240,38 @@ async function init() {
   } catch (err) {
     console.error('Failed to load digest:', err);
     notes.push('дайджест не загрузился');
+  }
+
+  // Load marathon end date
+  try {
+    const endCsv = await loadSheet(SHEET_ID, MARATHON_END_GID);
+    const firstLine = endCsv.split('\n')[0].trim().replace(/^"|"$/g, '').trim();
+    if (firstLine) {
+      const parsed = new Date(firstLine);
+      if (!isNaN(parsed.getTime())) {
+        marathonEndDate = parsed;
+      }
+    }
+  } catch (err) {
+    // no end date — timer runs forever
+  }
+
+  // Initial polling setup
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const initLocal = new Date(utc + TIMEZONE_OFFSET * 3600000);
+  lastPolledHour = initLocal.getHours();
+  const prevHour = lastPolledHour - 1;
+  if (prevHour >= 8 && prevHour <= 23) {
+    const ymd = getYMDForHour(prevHour);
+    const dateStr = formatDigestDate(ymd);
+    const hasDaily = digestData.some(e => e.isFullDay && formatDigestDate(e.time) === dateStr);
+    if (!hasDaily) {
+      const prefix = `${ymd}_${String(prevHour).padStart(2, '0')}`;
+      if (!digestData.some(e => e.time.startsWith(prefix))) {
+        startDigestPolling(prevHour);
+      }
+    }
   }
 
   updateTimer();

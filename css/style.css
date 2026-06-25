@@ -133,6 +133,16 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.3em;
   color: #C75B39;
+  margin-bottom: 0.75rem;
+}
+
+.digest-note {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #D4A373;
+  margin-top: -0.25rem;
   margin-bottom: 1.25rem;
 }
 
@@ -179,7 +189,7 @@ body {
   overflow-x: auto;
   scrollbar-width: thin;
   scrollbar-color: #D4A373 transparent;
-  padding-bottom: 0.6rem;
+  /* padding-bottom: 0.6rem; */
 }
 
 .digest-day {
@@ -226,7 +236,7 @@ body {
   gap: 0.4rem;
   overflow-x: auto;
   overflow-y: hidden;
-  padding-bottom: 0.3rem;
+  padding: 0.4rem 0 0.5rem;
   scrollbar-width: thin;
   scrollbar-color: #D4A373 transparent;
   scroll-behavior: smooth;
@@ -254,7 +264,8 @@ body {
 
 .digest-hour {
   flex-shrink: 0;
-  padding: 0.25rem 0.6rem 0.2rem;
+  min-width: 2.9rem;
+  padding: 0.3rem 0.6rem 0.5rem;
   border: 1px solid #D4A373;
   background: #FDF6E3;
   font-family: 'Courier New', monospace;
@@ -279,13 +290,55 @@ body {
 
 .digest-hour-fullday {
   margin-left: 0.4rem;
-  border-left: 2px solid #C75B39;
+  background: #C75B39;
+  color: #FDF6E3;
+  border-color: #C75B39;
+  font-weight: 700;
   font-style: italic;
   letter-spacing: 0.03em;
+  box-shadow: 3px 3px 0 #3D2B1F;
+  min-width: 3.5rem;
+}
+
+.digest-hour-fullday:hover {
+  background: #3D2B1F;
+  color: #FDF6E3;
+  border-color: #3D2B1F;
+  box-shadow: 3px 3px 0 #C75B39;
 }
 
 .digest-hour-fullday.active {
-  font-style: normal;
+  background: #3D2B1F;
+  color: #FDF6E3;
+  border-color: #3D2B1F;
+  box-shadow: 3px 3px 0 #C75B39;
+  font-style: italic;
+  transform: rotate(-2deg);
+}
+
+.digest-hour-fullday .digest-hour-date {
+  color: rgba(253, 246, 227, 0.7);
+}
+
+.digest-hour-loading {
+  border-style: dashed;
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+  letter-spacing: 0.15em;
+}
+
+.digest-hour-date {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.55rem;
+  opacity: 0.7;
+  font-style: italic;
+  line-height: 1;
+  font-family: 'Courier New', monospace;
 }
 
 .digest-hour-unread::after {
